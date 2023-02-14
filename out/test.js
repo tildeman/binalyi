@@ -13,11 +13,15 @@ let toolbox = {
 				},
 				{
 					"kind": "block",
+					"type": "monad_fail"
+				},
+				{
+					"kind": "block",
 					"type": "monad_operations"
 				},
 				{
 					"kind": "block",
-					"type": "monad_fail"
+					"type": "monad_bindings"
 				},
 				{
 					"kind": "block",
