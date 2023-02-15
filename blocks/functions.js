@@ -19,7 +19,7 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 			}
 		],
 		"output": null,
-		"colour": 290,
+		"style": "procedure_blocks",
 		"tooltip": "Anonymous function with one argument. Very useful for brain incineration.",
 		"helpUrl": ""
 	},
@@ -38,7 +38,7 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		],
 		"inputsInline": true,
 		"output": null,
-		"colour": 290,
+		"style": "procedure_blocks",
 		"tooltip": "Return the composition of two functions.",
 		"helpUrl": ""
 	},
@@ -57,14 +57,14 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		],
 		"inputsInline": true,
 		"output": null,
-		"colour": 290,
+		"style": "procedure_blocks",
 		"tooltip": "Apply the left-hand-side to the right-hand-side.",
 		"helpUrl": "https://wiki.haskell.org/$"
 	},
 	{
 		"type": "function_let",
 		"output": null,
-		"colour": 290,
+		"style": "procedure_blocks",
 		"tooltip": "Declare local variables for use in an expression.",
 		"helpUrl": "",
 		"mutator": "let_mutator",
@@ -77,7 +77,7 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"message0": "binding",
 		"previousStatement": null,
 		"nextStatement": null,
-		"colour": 290,
+		"style": "procedure_blocks",
 		"tooltip": "Add, remove, or reorder inputs to this let binding",
 		"enableContextMenu": false,
 		"helpUrl": ""
@@ -94,7 +94,7 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 				"name": "STACK"
 			}
 		],
-		"colour": 290,
+		"style": "procedure_blocks",
 		"tooltip": "",
 		"helpUrl": ""
 	}

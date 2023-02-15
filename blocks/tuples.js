@@ -37,33 +37,34 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"enableContextMenu": false
 	},
 	{
-		"type": "tuples_first",
-		"message0": "first of %1",
+		"type": "tuples_pair",
+		"message0": "%1 of %2",
 		"args0": [
 			{
+				"type": "field_dropdown",
+				"name": "ACC",
+				"options": [
+					[
+						"first",
+						"FIRST"
+					],
+					[
+						"second",
+						"SECOND"
+					]
+				]
+			},
+			{
 				"type": "input_value",
-				"name": "TUPLE",
+				"name": "NAME",
 				"check": "Tuple"
 			}
 		],
 		"output": null,
 		"colour": 65,
-		"tooltip": "Returns the first value of a 2-tuple.",
-		"helpUrl": ""
-	},
-	{
-		"type": "tuples_second",
-		"message0": "second of %1",
-		"args0": [
-			{
-				"type": "input_value",
-				"name": "TUPLE",
-				"check": "Tuple"
-			}
+		"extensions": [
+			"tuple_op_tooltip"
 		],
-		"output": null,
-		"colour": 65,
-		"tooltip": "Returns the second value of a 2-tuple.",
 		"helpUrl": ""
 	}
 ])
@@ -166,5 +167,14 @@ blocks['tuples_create_with'] = {
 		}
 	}
 }
+
+const TOOLTIPS_BY_AXEN = {
+	"FIRST": "Return the first value of a 2-tuple.",
+	"SECOND": "Return the second value of a 2-tuple."
+}
+Blockly.Extensions.register(
+	"tuple_op_tooltip",
+	Blockly.Extensions.buildTooltipForDropdown("ACC", TOOLTIPS_BY_AXEN)
+)
 
 Blockly.common.defineBlocks(blocks)

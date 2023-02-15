@@ -5,17 +5,17 @@
   - [x] Constructor
   - [x] Accessor (first, second)
 - [ ] Datatypes and synonyms
-- [ ] Controls
+- [x] Controls
   - [x] Pattern matching
   - [x] Wildcard pattern
-  - [ ] Guards
-- [ ] List operations
+  - [x] Guards
+- [x] List operations
   - [x] Constructor
-  - [ ] Accessor (first, last)
+  - [x] Accessor (first, last)
   - [x] Concatenation
-- [ ] Function operations
+- [x] Function operations
   - [x] Local bindings
-  - [ ] Degenerate local bindings (in Haskell, a "let" in a do-block)
+  - [x] Degenerate local bindings (in Haskell, a "let" in a do-block)
   - [x] Anonymous functions
 - [x] Variables
   - [x] Getter

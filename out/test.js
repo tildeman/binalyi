@@ -67,11 +67,7 @@ let toolbox = {
 				},
 				{
 					"kind": "block",
-					"type": "tuples_first"
-				},
-				{
-					"kind": "block",
-					"type": "tuples_second"
+					"type": "tuples_pair"
 				}
 			]
 		},
@@ -191,6 +187,10 @@ let toolbox = {
 				},
 				{
 					"kind": "block",
+					"type": "logic_cond"
+				},
+				{
+					"kind": "block",
 					"type": "logic_wildcard"
 				},
 				{
@@ -306,6 +306,10 @@ let toolbox = {
 				{
 					"kind": "block",
 					"type": "lists_join"
+				},
+				{
+					"kind": "block",
+					"type": "list_opad"
 				},
 				{
 					"kind": "block",
