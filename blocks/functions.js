@@ -97,6 +97,14 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"style": "procedure_blocks",
 		"tooltip": "",
 		"helpUrl": ""
+	},
+	{
+		"type": "function_partialize",
+		"message0": "\ud83d\udc22",
+		"output": null,
+		"colour": 290,
+		"tooltip": "Turn an operator into an ordinary function.",
+		"helpUrl": ""
 	}
 ])
 

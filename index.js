@@ -3,6 +3,7 @@ export * as Init from "./categories/initialization"
 
 import "./blocks/variables"
 import "./blocks/functions"
+import "./blocks/datatypes"
 import "./blocks/monads"
 import "./blocks/tuples"
 import "./blocks/lists"

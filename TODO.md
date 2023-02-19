@@ -5,6 +5,12 @@
   - [x] Constructor
   - [x] Accessor (first, second)
 - [ ] Datatypes and synonyms
+  - [x] Algebraic types
+  - [x] Compound types
+  - [ ] Type model interface
+  - [ ] Type aliases
+  - [ ] Data constructors
+  - [ ] Sanity checks
 - [x] Controls
   - [x] Pattern matching
   - [x] Wildcard pattern

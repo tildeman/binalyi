@@ -75,7 +75,24 @@ let toolbox = {
 			"kind": "category",
 			"name": "Types",
 			"categorystyle": "loop_category",
-			"contents":[]
+			"contents":[
+				{
+					"kind": "block",
+					"type": "types_list"
+				},
+				{
+					"kind": "block",
+					"type": "types_tuple"
+				},
+				{
+					"kind": "block",
+					"type": "types_maybe"
+				},
+				{
+					"kind": "block",
+					"type": "types_algebraic"
+				}
+			]
 		},
 		{
 			"kind": "category",
@@ -369,6 +386,10 @@ let toolbox = {
 				{
 					"kind": "block",
 					"type": "function_let"
+				},
+				{
+					"kind": "block",
+					"type": "function_partialize"
 				}
 			]
 		},

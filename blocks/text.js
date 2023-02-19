@@ -44,7 +44,10 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 			{
 				"type": "input_value",
 				"name": "VALUE",
-				"check": "String"
+				"check": [
+					"String",
+					"Array"
+				]
 			}
 		],
 		"output": null,
