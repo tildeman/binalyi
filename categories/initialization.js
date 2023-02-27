@@ -9,6 +9,6 @@ export function initialize(workspace) {
 	// workspace.addChangeListener(
 	// 	MutatorListener.mutatorOpenListener("function_let_mutatorarg"))
 
-	// workspace.addChangeListener(
-	// 	MutatorListener.mutatorOpenListener("variables_set_functional_mutatorarg"))
+	workspace.addChangeListener(
+		MutatorListener.mutatorOpenListener("variables_set_functional_mutatorarg"))
 }

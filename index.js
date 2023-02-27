@@ -1,7 +1,7 @@
 export * as Blockly from "blockly"
 export * as Init from "./categories/initialization"
 
-import "./blocks/variables"
+import "./blocks/variables_wopiecewise"
 import "./blocks/functions"
 import "./blocks/datatypes"
 import "./blocks/monads"

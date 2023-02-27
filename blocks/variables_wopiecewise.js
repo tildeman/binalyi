@@ -1,4 +1,7 @@
 import * as Blockly from "blockly"
+import {ObservableNotProcedureModel} from "../categories/procedure_models_for_not_procedures/observable_procedure_model"
+import {ObservableNotParameterModel} from "../categories/procedure_models_for_not_procedures/observable_parameter_model"
+import {triggerProceduresUpdate} from "../categories/procedure_models_for_not_procedures/update_procedures"
 
 // That stupid bug still lingers...
 
@@ -21,7 +24,7 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"enableContextMenu": false
 	},
 	{
-		"type": "variables_set_functional_mutatorarg", // TODO: Validate input name
+		"type": "variables_set_functional_mutatorarg",
 		"message0": "input name: %1",
 		"args0": [
 			{
@@ -71,61 +74,87 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"previousStatement": null,
 		"nextStatement": null,
 		"style": "variable_blocks",
-		"tooltip": "Declares this variable to be equal to the input. Do not declare twice or dire things will happen.",
+		"tooltip": "Declares this variable to be equal to the input. "
+			+ "Do not declare twice or dire things will happen.",
 		"helpUrl": "",
 		"extensions": [
-			"variable_functional_caller_set_def_mixin",
 			"variable_functional_update_shape_mixin",
-			"variable_def_var_mixin"
+			"variable_def_var_mixin",
+			"variable_dgd_mixin"
 		],
 		"mutator": "variable_def_mutator"
 	},
 	{
 		"type": "variables_get_functional",
-		"message0": "%1",
+		"message0": "%1 %2",
 		"args0": [
 			{
 				"type": "field_variable",
 				"name": "VAR",
 				"variable": "item"
+			},
+			{
+				"type": "input_dummy",
+				"name": "EXPR"
 			}
 		],
 		"output": null,
 		"style": "variable_blocks",
 		"tooltip": "Returns the value of this variable.",
-		"helpUrl": ""
+		"helpUrl": "",
+		"extensions": [
+			"variable_cgd_mixin"
+		],
+		"mutator": "variable_call_mutator"
 	}
 ])
 
+// Def get def is a stupid name for a mixin, so it's shortened to DGD
+const variableDGDMixin = function() {
+	const mixin = {
+		model_: null,
+
+		getProcedureModel() {
+			return this.model_
+		},
+
+		isProcedureDef() {
+			return true // Haven't tested this for incompatibility with built-in procs.
+		},
+
+		getVars: function() {
+			return this.getProcedureModel().getParameters().map(
+					(p) => p.getVariableModel().name)
+		},
+
+		getVarModels: function() {
+			return this.getProcedureModel().getParameters().map(
+				(p) => p.getVariableModel())
+		},
+
+		destroy: function() {
+			if (this.isInsertionMarker()) return
+			this.workspace.getProcedureMap().delete(this.getProcedureModel().getId())
+		}
+	}
+
+	mixin.model_ = new ObservableNotProcedureModel(
+		this.workspace,
+		this.getFieldValue("VAR")
+	)
+	this.workspace.getProcedureMap().add(mixin.getProcedureModel())
+
+	this.mixin(mixin,true)
+}
+Blockly.Extensions.register(
+	"variable_dgd_mixin",
+	variableDGDMixin
+)
+
 // Blockly procedures fall short to first-class curried higher-order functions
+// TODO: make a proper model for these variables, not just a global object of stuff.
 // Structure: {"<workspaceId>": {"<name>": [{"name","paramId"}]}}
 const CALLABLE_VARIABLES = Object.create(null)
-
-const variableCallerSetDefMixin = {
-	defVarIfNotExist: function(k) {
-		if ((Object.keys(CALLABLE_VARIABLES).indexOf(this.workspace.id)) === -1) {
-			CALLABLE_VARIABLES[this.workspace.id] = Object.create(null)
-		}
-		if ((Object.keys(CALLABLE_VARIABLES[this.workspace.id]).indexOf(k)) === -1) {
-			CALLABLE_VARIABLES[this.workspace.id][k] = []
-		}
-	},
-
-	getParams: function(k) {
-		return CALLABLE_VARIABLES[this.workspace.id][k]
-	},
-	setParams: function(k,s) {
-		CALLABLE_VARIABLES[this.workspace.id][k] = s
-	},
-
-	getCurrParams: function() {
-		return this.getParams(this.getFieldValue("VAR"))
-	}
-}
-Blockly.Extensions.registerMixin(
-	"variable_functional_caller_set_def_mixin",
-	variableCallerSetDefMixin
-)
 
 const variableUpdateShapeMixin = {
 	doVariableUpdate: function() {
@@ -135,8 +164,8 @@ const variableUpdateShapeMixin = {
 	},
 
 	updateParameters_: function() {
-		this.defVarIfNotExist(this.getFieldValue("VAR"))
-		const params = this.getCurrParams().map((p) => p["name"])
+		const params = this.getProcedureModel().getParameters().map(
+			(p) => p.getName())
 		const paramString = (params.length ? `with: ${params.join(", ")} ` : "") + "as"
 
 		// "Firing is unnecessary for event-deterministic fields" - Google
@@ -153,46 +182,97 @@ const variableUpdateShapeMixin = {
 		if (!this.mutator?.isVisible()) return
 
 		const mutatorWorkspace = this.mutator.getWorkspace()
-		for (const p of this.getCurrParams()) {
-			const block = mutatorWorkspace.getBlockById(p["paramId"])
+		for (const p of this.getProcedureModel().getParameters()) {
+			const block = mutatorWorkspace.getBlockById(p.getId())
 			if (!block) continue
-			if (block.getFieldValue("NAME") !== p["name"]) {
-				block.setFieldValue(p["name"], "NAME")
-			} 
+			if (block.getFieldValue("NAME") !== p.getName()) {
+				block.setFieldValue(p.getName(), "NAME")
+			}
 		}
 	}
 }
-
-
 Blockly.Extensions.registerMixin(
 	"variable_functional_update_shape_mixin",
 	variableUpdateShapeMixin
 )
 
 
+const variableDefVarMixin = function() {
+	const mixin = {
+		renameVarById: function(oldId, newId) {
+			const oldVar = this.workspace.getVariableById(oldId)
+			const model = this.getProcedureModel()
+			const index = model.getParameters().findIndex(
+				(p) => p.getVariableModel() === oldVar)
+			if (index === -1) return
+			const newVar = this.workspace.getVariableById(newId)
+			const oldParam = model.getParameter(index)
+			model.deleteParameter(index)
+			model.insertParameter(
+				new ObservableNotParameterModel(
+					this.workspace, newVar.name, oldParam.getId()),
+				index)
+		},
+
+		updateVarName: function(variable) {
+			const containsVar = this.getProcedureModel().getParameters().some(
+				(p) => p.getVariableModel() === variable
+			)
+			if (containsVar) {
+				triggerProceduresUpdate(this.workspace)
+			}
+		}
+	}
+
+	this.mixin(mixin, true)
+}
+Blockly.Extensions.register(
+	"variable_def_var_mixin",
+	variableDefVarMixin
+)
+
 const variableDefMutator = {
 	saveExtraState: function(){
 		const state = Object.create(null)
 		state["variableId"] = this.getFieldValue("VAR")
 
-		this.defVarIfNotExist(state["variableId"])
+		const params = this.getProcedureModel().getParameters()
 
-		const params = this.getParams(state["variableId"])
-
-		if (params && params.length) {
-			state["params"] = params
+		if (params.length) {
+			state["params"] = params.map((p) => {
+				return {
+					"name": p.getName(),
+					"id": p.getVariableModel().getId(),
+					"paramId": p.getId(),
+				}
+			})
 		}
 
 		return state
 	},
 
 	loadExtraState: function(state){
-		const map = this.workspace.getVariableMap()
-		const variableId = state["variableId"]
+		const map = this.workspace.getProcedureMap();
+		const procedureId = state['procedureId'];
+		if (procedureId && procedureId != this.model_.getId() &&
+			map.has(procedureId) &&
+			(this.isInsertionMarker() ||
+			 this.noBlockHasClaimedModel_(procedureId))) {
+			if (map.has(this.model_.getId())) {
+				map.delete(this.model_.getId());
+			}
+			this.model_ = map.get(procedureId);
+		}
 
 		if (state["params"]) {
-			this.setParams(variableId, state["params"])
+			for (let i = 0; i < state["params"].length; i++) {
+				const {name, id, paramId} = state["params"][i];
+				this.getProcedureModel().insertParameter(
+					new ObservableNotParameterModel(this.workspace, name, paramId, id), i);
+			}
 		}
+
+		this.doVariableUpdate();
 	},
 
 	decompose: function(workspace) {
@@ -204,15 +284,13 @@ const variableDefMutator = {
 			}
 		}
 
-		this.defVarIfNotExist(variableId)
-
 		let connDef = containerBlockDef["inputs"]["STACK"]
-		for (const param of this.getParams(variableId)) {
+		for (const param of this.getProcedureModel().getParameters()) {
 			connDef["block"] = {
 				"type": "variables_set_functional_mutatorarg",
-				"id": param["paramId"],
+				"id": param.getId(),
 				"fields": {
-					"NAME": param["name"]
+					"NAME": param.getName()
 				},
 				"next": {}
 			}
@@ -228,23 +306,25 @@ const variableDefMutator = {
 	compose: function(containerBlock) {
 		// Blockly has procedures; procedures have models
 		// When life gives you janky abstractions, pick something else.
-		const variableId = this.getFieldValue("VAR")
-		this.setParams(variableId, [])
-		const model = CALLABLE_VARIABLES[this.workspace.id][variableId]
+		const model = this.getProcedureModel()
 		const count = Object.keys(model).length
+		model.startBulkUpdate()
+		for (let i = count - 1; i >= 0; -- i) {
+			model.deleteParameter(i)
+		}
 
 		let i = 0
 		let paramBlock = containerBlock.getInputTargetBlock("STACK")
 		while (paramBlock && !paramBlock.isInsertionMarker()) {
-			model.push({
-				"name": paramBlock.getFieldValue("NAME"),
-				"paramId": paramBlock.id
-			})
-			paramBlock = paramBlock.nextConnection && paramBlock.nextConnection.targetBlock()
+			model.insertParameter(
+				new ObservableNotParameterModel(
+					this.workspace, paramBlock.getFieldValue("NAME"), paramBlock.id),
+				i)
+			paramBlock = paramBlock.nextConnection &&
+				paramBlock.nextConnection.targetBlock()
 			++i
 		}
-
-		this.doVariableUpdate()
+		model.endBulkUpdate()
 	}
 }
 Blockly.Extensions.registerMutator(
@@ -254,41 +334,11 @@ Blockly.Extensions.registerMutator(
 	["variables_set_functional_mutatorarg"]
 )
 
-const variableDefVarMixin = function() {
-	const mixin = {
-		renameVarById: function(oldId, newId) {
-			console.log(1) // Will this ever run
-			const model = this.getCurrParams();
-			const index = model.findIndex((p) => p.paramId === oldId)
-			if (index === -1) return
-			const newVar = this.workspace.getVariableById(newId)
-			const oldParam = model[index]
-			model[index]=[newVar.name, oldParam.paramId]
-		},
-
-		updateVarName: function(variable) {
-			const containsVar = this.getCurrParams().some(
-				(p) => p.paramId === variable.id_
-			)
-			console.log(this.getCurrParams())
-			console.log(variable.name)
-			if (containsVar) {
-				this.doVariableUpdate()
-			}
-		}
-	}
-
-	this.mixin(mixin, true)
-}
-Blockly.Extensions.register(
-	"variable_def_var_mixin",
-	variableDefVarMixin
-)
-
 // Mutator arguments that also declare variable names
 // Substantial amounts of code are taken from Blockly's source code
 
 const validateVariableParamMixin = {
+
 	validator_: function(varName) {
 		const sourceBlock = this.getSourceBlock()
 		const outerWs = Blockly.Mutator.findParentWs(sourceBlock.workspace)
@@ -333,7 +383,7 @@ const validateVariableParamMixin = {
 	},
 
 	// If your answer is wrong, modify the answer key in your favor
-	// Much like the Chinese GPS
+	// say someone doesn't understand what "soccer is", it's his problem now.
 	deleteImmediateVars_: function(newText) {
 		const outerWs = Blockly.Mutator.findParentWs(this.getSourceBlock().workspace)
 		if (!outerWs) {
@@ -373,6 +423,213 @@ const addValidatorToParamFieldHelper = function() {
 Blockly.Extensions.register(
 	"variable_functional_mutatorarg_add_validator_helper",
 	addValidatorToParamFieldHelper
+)
+
+const variableCGDMixin = function() {
+	const mixin = {
+		model_: null,
+
+		getProcedureModel() {
+			return this.model_
+		},
+
+		findProcedureModel_(name, params = []) {
+			const workspace = this.getTargetWorkspace_()
+			const model = workspace.getProcedureMap().getProcedures().find(
+				(proc) => proc.getName() === name)
+			if (!model) return null
+
+			const returnTypes = model.getReturnTypes()
+			const hasMatchingReturn = this.hasReturn_ ? returnTypes : !returnTypes
+			if (!hasMatchingReturn) return null
+
+			console.log(model)
+			return model
+		},
+
+		getTargetWorkspace_() {
+			return this.workspace.isFlyout ?
+				this.workspace.targetWorkspace :
+				this.workspace
+		},
+
+		isProcedureDef() {
+			return true // Haven't tested this for incompatibility with built-in procs.
+		},
+
+		getVars: function() {
+			return this.getProcedureModel().getParameters().map(
+				(p) => p.getVariableModel().name)
+		},
+
+		getVarModels: function() {
+			return this.getProcedureModel().getParameters().map(
+				(p) => p.getVariableModel())
+		}
+	}
+
+	mixin.model_ = new ObservableNotProcedureModel(
+		this.workspace,
+		this.getFieldValue("VAR")
+	)
+	this.workspace.getProcedureMap().add(mixin.getProcedureModel())
+
+	this.mixin(mixin,true)
+}
+Blockly.Extensions.register(
+	"variable_cgd_mixin",
+	variableCGDMixin
+)
+
+const variableCallMutator = {
+	itemCount_: 0,
+	
+	saveExtraState: function() {
+		const state = {
+			"itemCount": this.itemCount_,
+			"name": this.name_
+		}
+		console.log(this.name_)
+		const model = this.getProcedureModel();
+		if (!model) return state;
+		// state['name'] = model.getName();
+		return state
+	},
+
+	loadExtraState: function(state) {
+		this.itemCount_ = state["itemCount"]
+		this.name = state["name"]
+
+		if (!this.model_) this.model_ = this.findProcedureModel_(name, []);
+
+		this.updateShape_()
+	}, // This is going to be a real headache
+
+	decompose: function(workspace) {
+		const containerBlock = workspace.newBlock("variables_get_functional_container")
+		containerBlock.initSvg()
+		let connection = containerBlock.getInput("STACK").connection
+		for (let i = 0; i < this.itemCount_; ++i) {
+			const itemBlock = workspace.newBlock("variables_get_functional_mutatorarg")
+			itemBlock.initSvg()
+			connection.connect(itemBlock.previousConnection)
+			connection = itemBlock.nextConnection
+		}
+		return containerBlock
+	},
+
+	compose: function(containerBlock) {
+		let itemBlock = containerBlock.getInputTargetBlock("STACK")
+		const connections = []
+		while (itemBlock) {
+			if (itemBlock.isInsertionMarker()) {
+				itemBlock = itemBlock.getNextBlock()
+				continue
+			}
+			connections.push(itemBlock.valueConnection_)
+			itemBlock = itemBlock.getNextBlock()
+		}
+
+		for (let i = 0; i < this.itemCount_; ++i) {
+			const connection = this.getInput("ARG" + i).connection.targetConnection
+			if (connection && connections.indexOf(connection) === -1) {
+				connection.disconnect()
+			}
+		}
+		this.itemCount_ = connections.length
+		this.updateShape_()
+
+		for (let i = 0; i < this.itemCount_; ++i) {
+			Blockly.Mutator.reconnect(connections[i], this, "ARG" + i)
+		}
+	},
+
+	saveConnections: function(containerBlock) {
+		let itemBlock = containerBlock.getInputTargetBlock("STACK")
+		let i = 0
+		while (itemBlock) {
+			if (itemBlock.isInsertionMarker()) {
+				itemBlock = itemBlock.getNextBlock()
+				continue
+			}
+			const input = this.getInput("ARG" + i)
+			itemBlock.valueConnection_ = input && input.connection.targetConnection
+			itemBlock = itemBlock.getNextBlock()
+			i++
+		}
+	},
+
+	updateShape_: function() {
+		let oldId = this.getFieldValue("VAR")
+
+		let oldName = "%{BKY_VARIABLES_DEFAULT_NAME}"
+		if (oldId) {
+			oldName = this.workspace.getVariableById(oldId).name
+			console.log(this.getField("VAR").getText())
+		}
+		else {
+			console.log(this.name_)
+		}
+
+		let targetBlock = null
+		if (this.getInput("EXPR")) {
+			this.removeInput("EXPR")
+		}
+
+		const procedureModel = this.getProcedureModel().getParameters().map(
+			(p) => p.getName()
+		)
+
+		for (let i = 0; i < this.itemCount_; ++i) {
+			if (!this.getInput("ARG" + i)) {
+				const input = this.appendValueInput("ARG" + i)
+					  .setAlign(Blockly.Input.Align.RIGHT)
+				if (i === 0) {
+					input.appendField(
+						new Blockly.FieldVariable(
+							oldName,
+							null,
+							["functional"],
+							"functional"
+						),
+						"VAR"
+					).appendField("with:")
+				}
+			}
+			
+		}
+
+		for (let i = this.itemCount_; this.getInput("ARG" + i); i++) {
+			this.removeInput("ARG" + i)
+		}
+
+		if (!this.itemCount_) {
+			this.appendDummyInput("EXPR")
+				.appendField(
+					new Blockly.FieldVariable(
+						oldName,
+						null,
+						["functional"],
+						"functional"
+					),
+					"VAR"
+				)
+		}
+	}
+}
+Blockly.Extensions.registerMutator(
+	"variable_call_mutator",
+	variableCallMutator,
+	undefined,
+	["variables_get_functional_mutatorarg"]
+)
+
+const variableUpdateShape = function() {
+	this.updateShape_()
+}
+Blockly.Extensions.register(
+	"variable_functional_update_shape",
+	variableUpdateShape
 )
 
 Blockly.common.defineBlocks(blocks)
