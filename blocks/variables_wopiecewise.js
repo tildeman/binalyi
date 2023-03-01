@@ -437,13 +437,8 @@ const variableCGDMixin = function() {
 			const workspace = this.getTargetWorkspace_()
 			const model = workspace.getProcedureMap().getProcedures().find(
 				(proc) => proc.getName() === name)
+			console.log(workspace.getProcedureMap().getProcedures())
 			if (!model) return null
-
-			const returnTypes = model.getReturnTypes()
-			const hasMatchingReturn = this.hasReturn_ ? returnTypes : !returnTypes
-			if (!hasMatchingReturn) return null
-
-			console.log(model)
 			return model
 		},
 
@@ -489,18 +484,16 @@ const variableCallMutator = {
 			"itemCount": this.itemCount_,
 			"name": this.name_
 		}
-		console.log(this.name_)
 		const model = this.getProcedureModel();
 		if (!model) return state;
-		// state['name'] = model.getName();
 		return state
 	},
 
 	loadExtraState: function(state) {
 		this.itemCount_ = state["itemCount"]
-		this.name = state["name"]
+		this.name_ = state["name"]
 
-		if (!this.model_) this.model_ = this.findProcedureModel_(name, []);
+		if (!this.model_) this.model_ = this.findProcedureModel_(this.name_, []);
 
 		this.updateShape_()
 	}, // This is going to be a real headache
