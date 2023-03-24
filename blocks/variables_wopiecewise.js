@@ -4,6 +4,11 @@ import {ObservableNotParameterModel} from "../categories/procedure_models_for_no
 import {triggerProceduresUpdate} from "../categories/procedure_models_for_not_procedures/update_procedures"
 
 // That stupid bug still lingers...
+// TODO: The names on each model in a workspace's procedure map should be unique
+// TODO: Name collisions must not occur in a workspace
+// TODO: Variable deletion should delete all the associated getters and setters
+// TODO: Pair the variable name with the value of the variable field
+// TODO: Automatically reference variables in the getter, initially or on change
 
 const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	{
@@ -109,10 +114,12 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	}
 ])
 
-// Def get def is a stupid name for a mixin, so it's shortened to DGD
+// Variable definition get definition (def get def) is a stupid name for a mixin
+// Therefore it's shortened to DGD
 const variableDGDMixin = function() {
 	const mixin = {
 		model_: null,
+		name_: null,
 
 		getProcedureModel() {
 			return this.model_
@@ -140,7 +147,7 @@ const variableDGDMixin = function() {
 
 	mixin.model_ = new ObservableNotProcedureModel(
 		this.workspace,
-		this.getFieldValue("VAR")
+		null
 	)
 	this.workspace.getProcedureMap().add(mixin.getProcedureModel())
 
@@ -232,16 +239,18 @@ Blockly.Extensions.register(
 )
 
 const variableDefMutator = {
+
 	saveExtraState: function(){
 		const state = Object.create(null)
 		state["variableId"] = this.getFieldValue("VAR")
+		state["name"] = this.name_
 
 		const params = this.getProcedureModel().getParameters()
 
 		if (params.length) {
 			state["params"] = params.map((p) => {
 				return {
-					"name": p.getName(),
+					"name": this.name_,
 					"id": p.getVariableModel().getId(),
 					"paramId": p.getId(),
 				}
@@ -252,23 +261,29 @@ const variableDefMutator = {
 	},
 
 	loadExtraState: function(state){
-		const map = this.workspace.getProcedureMap();
-		const procedureId = state['procedureId'];
+		const map = this.workspace.getProcedureMap()
+		const procedureId = state['variableId']
+		console.log(procedureId)
+		console.log(this.model_.getId())
 		if (procedureId && procedureId != this.model_.getId() &&
 			map.has(procedureId) &&
-			(this.isInsertionMarker() ||
-			 this.noBlockHasClaimedModel_(procedureId))) {
+			(this.isInsertionMarker() /* ||
+										 this.noBlockHasClaimedModel_(procedureId)*/)) {
+			console.log("yes!")
 			if (map.has(this.model_.getId())) {
-				map.delete(this.model_.getId());
+				map.delete(this.model_.getId())
 			}
-			this.model_ = map.get(procedureId);
+			this.model_ = map.get(procedureId)
 		}
+		this.name_ = state["name"]
+		console.log(state)
+		this.model_.setName(this.name_)
 
 		if (state["params"]) {
 			for (let i = 0; i < state["params"].length; i++) {
-				const {name, id, paramId} = state["params"][i];
+				const {name, id, paramId} = state["params"][i]
 				this.getProcedureModel().insertParameter(
-					new ObservableNotParameterModel(this.workspace, name, paramId, id), i);
+					new ObservableNotParameterModel(this.workspace, name, paramId, id), i)
 			}
 		}
 
@@ -308,6 +323,7 @@ const variableDefMutator = {
 		// When life gives you janky abstractions, pick something else.
 		const model = this.getProcedureModel()
 		const count = Object.keys(model).length
+		console.log(this.getFieldValue("VAR"))
 		model.startBulkUpdate()
 		for (let i = count - 1; i >= 0; -- i) {
 			model.deleteParameter(i)
@@ -433,7 +449,7 @@ const variableCGDMixin = function() {
 			return this.model_
 		},
 
-		findProcedureModel_(name, params = []) {
+		findNotProcedureModel_(name, params = []) {
 			const workspace = this.getTargetWorkspace_()
 			const model = workspace.getProcedureMap().getProcedures().find(
 				(proc) => proc.getName() === name)
@@ -463,12 +479,6 @@ const variableCGDMixin = function() {
 		}
 	}
 
-	mixin.model_ = new ObservableNotProcedureModel(
-		this.workspace,
-		this.getFieldValue("VAR")
-	)
-	this.workspace.getProcedureMap().add(mixin.getProcedureModel())
-
 	this.mixin(mixin,true)
 }
 Blockly.Extensions.register(
@@ -493,7 +503,7 @@ const variableCallMutator = {
 		this.itemCount_ = state["itemCount"]
 		this.name_ = state["name"]
 
-		if (!this.model_) this.model_ = this.findProcedureModel_(this.name_, []);
+		if (!this.model_) this.model_ = this.findNotProcedureModel_(this.name_, []);
 
 		this.updateShape_()
 	}, // This is going to be a real headache
@@ -558,20 +568,17 @@ const variableCallMutator = {
 		let oldName = "%{BKY_VARIABLES_DEFAULT_NAME}"
 		if (oldId) {
 			oldName = this.workspace.getVariableById(oldId).name
-			console.log(this.getField("VAR").getText())
 		}
-		else {
-			console.log(this.name_)
-		}
+		console.log(this.model_)
 
 		let targetBlock = null
 		if (this.getInput("EXPR")) {
 			this.removeInput("EXPR")
 		}
 
-		const procedureModel = this.getProcedureModel().getParameters().map(
-			(p) => p.getName()
-		)
+		//const procedureModel = this.getProcedureModel().getParameters().map(
+		//	(p) => p.getName()
+		//)
 
 		for (let i = 0; i < this.itemCount_; ++i) {
 			if (!this.getInput("ARG" + i)) {

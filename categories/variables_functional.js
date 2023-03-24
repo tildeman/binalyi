@@ -16,14 +16,6 @@ export function functionalVarFlyoutBlocks(workspace) {
 	if (variableModelList.length > 0) {
 		const mostRecentVariable = variableModelList[variableModelList.length - 1]
 		if (Blockly.Blocks["variables_set_functional"]) {
-			//const block = Blockly.utils.xml.createElement("block")
-			//block.setAttribute("type", "variables_set_functional")
-			//block.appendChild(
-			//	Blockly.Variables.generateVariableFieldDom(
-			//		mostRecentVariable
-			//	)
-			//)
-			//xmlList.push(block)
 			xmlList.push({
 				"kind": "block",
 				"type": "variables_set_functional",
@@ -32,6 +24,9 @@ export function functionalVarFlyoutBlocks(workspace) {
 						"name": mostRecentVariable.name,
 						"type": "functional"
 					}
+				},
+				"extraState": {
+					"name": mostRecentVariable.name
 				}
 			})
 		}
@@ -39,17 +34,6 @@ export function functionalVarFlyoutBlocks(workspace) {
 		if (Blockly.Blocks["variables_get_functional"]) {
 			variableModelList.sort(Blockly.VariableModel.compareByName)
 			for (let i = 0, variable; variable = variableModelList[i]; ++i) {
-				//const block = Blockly.utils.xml.createElement("block")
-				//block.setAttribute("type", "variables_get_functional")
-				//block.setAttribute("gap", "8")
-				//block.appendChild(
-				//	generateVariableFieldDom(variable)
-				//)
-
-				//const mutation = Blockly.utils.xml.createElement("mutation")
-				//mutation.setAttribute("name", variable.name)
-				//block.appendChild(mutation)
-				//xmlList.push(block)
 				xmlList.push({
 					"kind": "block",
 					"type": "variables_get_functional",
@@ -75,9 +59,6 @@ export function functionalVarFlyoutBlocks(workspace) {
 
 export function functionalVarFlyout(workspace) {
 	let toolbox = []
-	// const button = document.createElement("button")
-	// button.setAttribute("text", "Create variable/function...")
-	// button.setAttribute("callbackKey", "VAR_FUNCTIONAL")
 	const button = {
 		"kind": "button",
 		"text": "Create variable/function...",
@@ -86,14 +67,14 @@ export function functionalVarFlyout(workspace) {
 
 
 	workspace.registerButtonCallback(
-	"VAR_FUNCTIONAL",
-	function(button) {
-		Blockly.Variables.createVariableButtonHandler(
-		button.getTargetWorkspace(),
-		null,
-		"functional"
-		)
-	}
+		"VAR_FUNCTIONAL",
+		function(button) {
+			Blockly.Variables.createVariableButtonHandler(
+				button.getTargetWorkspace(),
+				null,
+				"functional"
+			)
+		}
 	)
 
 	toolbox.push(button)
