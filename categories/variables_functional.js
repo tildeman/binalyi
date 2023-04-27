@@ -12,11 +12,11 @@ export function generateVariableFieldDom(variableModel) {
 
 export function functionalVarFlyoutBlocks(workspace) {
 	const variableModelList = workspace.getVariablesOfType("functional")
-	const xmlList = []
+	const jsonList = []
 	if (variableModelList.length > 0) {
 		const mostRecentVariable = variableModelList[variableModelList.length - 1]
 		if (Blockly.Blocks["variables_set_functional"]) {
-			xmlList.push({
+			jsonList.push({
 				"kind": "block",
 				"type": "variables_set_functional",
 				"fields": {
@@ -34,7 +34,7 @@ export function functionalVarFlyoutBlocks(workspace) {
 		if (Blockly.Blocks["variables_get_functional"]) {
 			variableModelList.sort(Blockly.VariableModel.compareByName)
 			for (let i = 0, variable; variable = variableModelList[i]; ++i) {
-				xmlList.push({
+				jsonList.push({
 					"kind": "block",
 					"type": "variables_get_functional",
 					"fields": {
@@ -47,14 +47,14 @@ export function functionalVarFlyoutBlocks(workspace) {
 						"name": variable.name
 					}
 				})
-				xmlList.push({
+				jsonList.push({
 					"kind": "sep",
 					"gap": "8"
 				})
 			}
 		}
 	}
-	return xmlList
+	return jsonList
 }
 
 export function functionalVarFlyout(workspace) {
@@ -81,6 +81,6 @@ export function functionalVarFlyout(workspace) {
 
 	const blockList = functionalVarFlyoutBlocks(workspace)
 	toolbox = toolbox.concat(blockList)
-	
+
 	return toolbox
 }

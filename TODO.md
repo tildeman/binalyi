@@ -7,9 +7,8 @@
 - [ ] Datatypes and synonyms
   - [x] Algebraic types
   - [x] Compound types
-  - [ ] Type model interface
-  - [ ] Type aliases
-  - [ ] Data constructors
+  - [x] Type model interface
+  - [x] Data constructors
   - [ ] Sanity checks
 - [x] Controls
   - [x] Pattern matching
