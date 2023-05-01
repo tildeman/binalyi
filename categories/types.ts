@@ -23,7 +23,8 @@ type TypeBlock = Blockly.BlockSvg & {
 
 type DataConstructorBlock = Blockly.BlockSvg & {
 	isolate: () => void,
-	updateShape_: () => void
+	updateShape_: () => void,
+	renameDataConstructor: () => void
 }
 
 type DataConstructorGetBlock = Blockly.BlockSvg & {
@@ -32,24 +33,49 @@ type DataConstructorGetBlock = Blockly.BlockSvg & {
 	updateShape_: () => void
 }
 
-// The workspace is the most important thing here. Ignore actual button things.
-type FlyoutButtonWithWorkspace = {
-	workspace: Blockly.Workspace
-}
-
 var callback_idempotence = false
 
 // Let's start, shall we?
 
-function typeFlyoutBlocks(workspace: TypeWorkspace): any[] {
-	const jsonList: any[] = [
+function typeFlyoutBlocks(
+	workspace: TypeWorkspace): Blockly.utils.toolbox.FlyoutDefinition {
+	let jsonList: any[] = [
 		{
 			"kind": "block",
 			"type": "types_primitive"
 		},
 		{
 			"kind": "block",
+			"type": "types_primitive",
+			"fields": {
+				"TYPE": "Double"
+			}
+		},
+		{
+			"kind": "block",
+			"type": "types_primitive",
+			"fields": {
+				"TYPE": "Bool"
+			}
+		},
+		{
+			"kind": "block",
 			"type": "types_list"
+		},
+		{
+			"kind": "block",
+			"type": "types_list",
+			"inputs": {
+				"SUBTYPE": {
+					"block": {
+						"kind": "block",
+						"type": "types_primitive",
+						"fields": {
+							"TYPE": "Char"
+						}
+					}
+				}
+			}
 		},
 		{
 			"kind": "block",
@@ -61,6 +87,10 @@ function typeFlyoutBlocks(workspace: TypeWorkspace): any[] {
 			"extraState": {
 				"itemCount": 0
 			}
+		},
+		{
+			"kind": "block",
+			"type": "types_cast"
 		},
 		{
 			"kind": "block",
@@ -121,8 +151,9 @@ function typeFlyoutBlocks(workspace: TypeWorkspace): any[] {
 	return jsonList
 }
 
-function updateDynamicCategory(workspace: TypeWorkspace): any[] {
-	let toolbox = []
+function updateDynamicCategory(
+	workspace: TypeWorkspace): Blockly.utils.toolbox.FlyoutDefinition {
+	let toolbox  = []
 	const button = {
 		"kind": "button",
 		"text": "Create type...",
@@ -137,25 +168,23 @@ function updateDynamicCategory(workspace: TypeWorkspace): any[] {
 }
 
 function addTypeCallback(bflyout: Blockly.FlyoutButton): void {
-	const targetwsp = bflyout.getTargetWorkspace() as TypeWorkspace
-	// Modern problems require modern solutions
-	const workspace =
-		(bflyout as unknown as FlyoutButtonWithWorkspace).workspace as TypeWorkspace
+	const workspace = bflyout.getTargetWorkspace() as TypeWorkspace
+	const flyoutwsp = workspace.getFlyout().getWorkspace() as TypeWorkspace
 	if (!callback_idempotence){
-		targetwsp.typeMap = workspace.typeMap = {
+		flyoutwsp.typeMap = workspace.typeMap = {
 			types: {},
 			dataConstructors: {},
 		}
-		targetwsp.getTypeMap = workspace.getTypeMap = function(){
+		flyoutwsp.getTypeMap = workspace.getTypeMap = function(){
 			return this.typeMap.types
 		}
-		targetwsp.setTypeMap = workspace.setTypeMap = function(typename, value){
+		flyoutwsp.setTypeMap = workspace.setTypeMap = function(typename, value){
 			this.typeMap.types[typename] = value
 		}
-		targetwsp.getDataConsMap = workspace.getDataConsMap = function(){
+		flyoutwsp.getDataConsMap = workspace.getDataConsMap = function(){
 			return this.typeMap.dataConstructors
 		}
-		targetwsp.setDataConsMap = workspace.setDataConsMap = function(typename, value){
+		flyoutwsp.setDataConsMap = workspace.setDataConsMap = function(typename, value){
 			this.typeMap.dataConstructors[typename] = value
 		}
 	}
@@ -186,7 +215,7 @@ function addTypeCallback(bflyout: Blockly.FlyoutButton): void {
 	))
 
 	// Update the dynamic category to include the new type
-	targetwsp.getToolbox().refreshSelection()
+	workspace.getToolbox().refreshSelection()
 }
 
 function generateModelParams(block: Blockly.Block | null): ITypeModel {
@@ -275,9 +304,9 @@ function generateModelParams(block: Blockly.Block | null): ITypeModel {
 
 export function identifyModelParams(model: ITypeModel | null) : (string | string[] | null) {
 	switch (model.kind) {
-		case 0:
+		case TypeKind.Placeholder:
 			return null
-		case 1:
+		case TypeKind.Primitive:
 			switch (model.name) {
 				case "Int":
 				case "Integer":
@@ -291,10 +320,10 @@ export function identifyModelParams(model: ITypeModel | null) : (string | string
 				case "Bool":
 					return "Boolean"
 			}
-		case 2:
+		case TypeKind.List:
 			// Assuming strings are arrays of characters; this is not always the case.
 			return ["Array", "String"]
-		case 3:
+		case TypeKind.Tuple:
 			// Although there is no 1-tuple in Haskell and the fact that this library
 			// is primarily designed with Haskell in mind, support for other languages
 			// such as Python also exists, plus allowing users to define these is
@@ -389,7 +418,8 @@ export function removeType(workspace: TypeWorkspace, typeName: string): void {
 	delete workspace.getTypeMap()[typeName]
 }
 
-export function typeFlyout(workspace: TypeWorkspace): any[] {
+export function typeFlyout(
+	workspace: TypeWorkspace): Blockly.utils.toolbox.FlyoutDefinition {
 	workspace.registerButtonCallback(
 		"DATATYPE",
 		addTypeCallback
@@ -474,7 +504,7 @@ export function nameIsUsed(name: string, workspace: TypeWorkspace, opt_exclude?:
 }
 
 function nameIsLegal(name: string, workspace: TypeWorkspace, opt_exclude?: Blockly.Block): boolean {
-	return !nameIsUsed(name, workspace, opt_exclude);
+	return !nameIsUsed(name, workspace, opt_exclude)
 }
 
 export function findLegalName(name: string, block: Blockly.Block): string {
@@ -485,7 +515,7 @@ export function findLegalName(name: string, block: Blockly.Block): string {
 	name = name || "Something"
 	while (!nameIsLegal(name, (block.workspace as TypeWorkspace), block)) {
 		// Collision with another data constructor.
-		const r = name.match(/^(.*?)(\d+)$/);
+		const r = name.match(/^(.*?)(\d+)$/)
 		if (!r) {
 			name += "2"
 		} else {
@@ -496,7 +526,7 @@ export function findLegalName(name: string, block: Blockly.Block): string {
 }
 
 export function rename(this: Blockly.Field, name: string): string {
-	const block:any = this.getSourceBlock()
+	const block = this.getSourceBlock() as DataConstructorBlock
 
 	// Strip leading and trailing whitespace.  Beyond this, all names are legal.
 	// Later in the code I'd have to enforce the first letter being capitalized.

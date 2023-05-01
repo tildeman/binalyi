@@ -3,8 +3,13 @@ import * as Blockly from "blockly"
 const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	{
 		"type": "logic_patternmatch",
-		"message0": "case %1 run %2",
+		"message0": "match %1 case %2 run %3",
 		"args0": [
+			{
+				"type": "input_value",
+				"name": "PATTERN",
+				"align": "RIGHT"
+			},
 			{
 				"type": "input_value",
 				"name": "CASE0",

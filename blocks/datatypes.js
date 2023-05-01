@@ -3,6 +3,26 @@ import { removeType, identifyModelParams, findLegalName, rename } from "../categ
 
 const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	{
+		"type": "types_cast",
+		"message0": "cast %1 to %2",
+		"args0": [
+			{
+				"type": "input_value",
+				"name": "VALUE"
+			},
+			{
+				"type": "input_value",
+				"name": "TYPE",
+				"check": "Type"
+			}
+		],
+		"output": null,
+		"style": "loop_blocks",
+		"tooltip": "Cast a value into a type.",
+		"inputsInline": true,
+		"helpUrl": ""
+	},
+	{
 		"type": "types_list",
 		"message0": "List of %1",
 		"args0": [
@@ -60,12 +80,12 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 						"Int"
 					],
 					[
-						"Decimal",
-						"Float"
-					],
-					[
 						"Big decimal",
 						"Double"
+					],
+					[
+						"Decimal",
+						"Float"
 					],
 					[
 						"Character",
@@ -80,7 +100,9 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		],
 		"output": "Type",
 		"style": "loop_blocks",
-		"tooltip": "A primitive data type.",
+		"extensions": [
+			"types_tooltip"
+		],
 		"helpUrl": ""
 	},
 	{
@@ -172,6 +194,19 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"helpUrl": ""
 	},
 ])
+
+const TOOLTIPS_BY_TYPE = {
+	"Integer": "An integer without constraints.",
+	"Int": "An integer from approximately -10^18 to 10^18.",
+	"Float": "A rough representation of decimals from -3*10^38 to 3*10^38.",
+	"Double": "A finer representation of decimals from -2*10^308 to 2*10^308.",
+	"Char": "A Unicode character.",
+	"Bool": "A truth value representing true or false."
+}
+Blockly.Extensions.register(
+	"types_tooltip",
+	Blockly.Extensions.buildTooltipForDropdown("TYPE", TOOLTIPS_BY_TYPE)
+)
 
 const productTypeMutator = {
 	itemCount_: 2,

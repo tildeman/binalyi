@@ -33,7 +33,7 @@ let toolbox = {
 			"kind": "category",
 			"name": "Colour",
 			"categorystyle": "colour_category",
-			"contents":[
+			"contents": [
 				{
 					"kind": "block",
 					"type": "colour_picker"
@@ -56,7 +56,7 @@ let toolbox = {
 			"kind": "category",
 			"name": "Tuples",
 			"colour": "65",
-			"contents":[
+			"contents": [
 				{
 					"kind": "block",
 					"type": "tuples_create_empty"
@@ -81,7 +81,7 @@ let toolbox = {
 			"kind": "category",
 			"name": "Text",
 			"categorystyle": "text_category",
-			"contents":[
+			"contents": [
 				{
 					"kind": "block",
 					"type": "text"
@@ -97,6 +97,10 @@ let toolbox = {
 				{
 					"kind": "block",
 					"type": "text_length"
+				},
+				{
+					"kind": "block",
+					"type": "text_charops"
 				},
 				{
 					"kind": "block",
@@ -160,7 +164,7 @@ let toolbox = {
 			"kind": "category",
 			"name": "Logic",
 			"categorystyle": "logic_category",
-			"contents":[
+			"contents": [
 				{
 					"kind": "block",
 					"type": "logic_boolean"
@@ -203,7 +207,7 @@ let toolbox = {
 			"kind": "category",
 			"name": "Math",
 			"categorystyle": "math_category",
-			"contents":[
+			"contents": [
 				{
 					"kind": "block",
 					"type": "math_number"
@@ -255,10 +259,6 @@ let toolbox = {
 				{
 					"kind": "block",
 					"type": "math_atan2"
-				},
-				{
-					"kind": "block",
-					"type": "math_cast"
 				}
 			]
 		},
@@ -266,7 +266,7 @@ let toolbox = {
 			"kind": "category",
 			"name": "Lists",
 			"categorystyle": "list_category",
-			"contents":[
+			"contents": [
 				{
 					"kind": "block",
 					"type": "lists_create_empty"
