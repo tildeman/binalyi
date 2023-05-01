@@ -1,4 +1,5 @@
 import * as Blockly from "blockly"
+import { removeType, identifyModelParams, findLegalName, rename } from "../categories/types.ts"
 
 const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	{
@@ -21,7 +22,7 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"output": "Type",
 		"style": "loop_blocks",
 		"tooltip": "A product type of different things.",
-		"mutator": "types_mutator",
+		"mutator": "tuple_type_mutator",
 		"extensions": [
 			"types_post_initialization"
 		],
@@ -69,6 +70,10 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 					[
 						"Character",
 						"Char"
+					],
+					[
+						"Truth",
+						"Bool"
 					]
 				]
 			}
@@ -119,7 +124,7 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"helpUrl": ""
 	},
 	{
-		"type": "types_dc_def", // TODO: Make a block that uses data from this block.
+		"type": "types_dc_def",
 		"message0": "data %1 of %2",
 		"args0": [
 			{
@@ -128,14 +133,15 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 				"text": "Something"
 			},
 			{
-				"type": "input_value",
-				"name": "DATA0",
-				"check": "Type"
+				"type": "input_dummy",
+				"name": "META"
 			}
 		],
 		"extensions": [
 			"data_constructor_initialization",
-			"item_count_getter_mixin"
+			"dc_context_menu_mixin",
+			"disconnect_blocks_mixin",
+			"dc_rename_mixin"
 		],
 		"mutator": "data_cons_mutator",
 		"style": "loop_blocks",
@@ -146,6 +152,10 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"type": "types_type",
 		"output": "Type",
 		"style": "loop_blocks",
+		"extensions": [
+			"disconnect_blocks_mixin",
+			"type_menu_mixin"
+		],
 		"mutator": "type_mutator",
 		"tooltip": "",
 		"helpUrl": ""
@@ -154,6 +164,9 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"type": "types_dc_get",
 		"output": "Type",
 		"style": "loop_blocks",
+		"extensions": [
+			"disconnect_blocks_mixin"
+		],
 		"mutator": "data_cons_get_mutator",
 		"tooltip": "",
 		"helpUrl": ""
@@ -255,7 +268,7 @@ const productTypeMutator = {
 	}
 }
 Blockly.Extensions.registerMutator(
-	"types_mutator",
+	"tuple_type_mutator",
 	productTypeMutator,
 	undefined,
 	["types_mutator_item"]
@@ -270,10 +283,9 @@ Blockly.Extensions.register(
 )
 
 function dataConstructorUpdateShape() {
-	const input = this.getInput("DATA0")
-	input
-		.appendField(new Blockly.FieldDropdown(retrieveTypeList(this.workspace)), "TYPE")
-		.appendField("with")
+	const input = this.getInput("META")
+	input.appendField(new Blockly.FieldDropdown(retrieveTypeList(this.workspace)), "TYPE")
+	this.getField("NAME").setValidator(rename)
 	this.updateShape_()
 }
 Blockly.Extensions.register(
@@ -281,6 +293,7 @@ Blockly.Extensions.register(
 	dataConstructorUpdateShape
 )
 
+// Blockly developers call this a factory, so you can call this retrieveTypeListFactory
 function retrieveTypeList(workspace) {
 	return function() {
 		if (workspace.getTypeMap) {
@@ -290,14 +303,73 @@ function retrieveTypeList(workspace) {
 	}
 }
 
-const itemCountGetterMixin = {
-	getItemCount: function() {
-		return this.itemCount_
+// I want to call this a curried function, but this sounds like alien talk.
+function deleteOptionCallback(block) {
+	return function() {
+		const workspace = block.workspace
+		const typeName = block.getFieldValue("TYPE")
+		removeType(workspace, typeName)
+	}
+}
+
+function deleteRenameOptionCallback(block) {
+	return function() {
+		const workspace = block.workspace
+		const typeName = block.typeName_
+		removeType(workspace, typeName)
+	}
+}
+
+function tmpFindNameFactory(block) {
+	return function() {
+		let s = prompt("What do you want to call this block?")
+		if (s) alert("The closest available name: " + findLegalName(s, block))
+	}
+}
+
+const typeContextMenuMixin = {
+	customContextMenu: function(options) {
+		options.push({
+			text: "Delete Type",
+			enabled: true,
+			callback: deleteRenameOptionCallback(this)
+		})
 	}
 }
 Blockly.Extensions.registerMixin(
-	"item_count_getter_mixin",
-	itemCountGetterMixin
+	"type_menu_mixin",
+	typeContextMenuMixin
+)
+
+const dataConstructorContextMenuMixin = {
+	customContextMenu: function(options) {
+		options.push({
+			text: "Delete Type",
+			enabled: true,
+			callback: deleteOptionCallback(this)
+		})
+		options.push({
+			text: "Find a Legal Name",
+			enabled: true,
+			callback: tmpFindNameFactory(this)
+		})
+	}
+}
+Blockly.Extensions.registerMixin(
+	"dc_context_menu_mixin",
+	dataConstructorContextMenuMixin
+)
+
+const dataConstructorRenameMixin = {
+	renameDataConstructor: function(oldName, newName) {
+		if (oldName === this.getFieldValue("NAME")) {
+			this.setFieldValue(newName, "NAME")
+		}
+	}
+}
+Blockly.Extensions.registerMixin(
+	"dc_rename_mixin",
+	dataConstructorRenameMixin
 )
 
 const dataConstructorMutator = {
@@ -369,36 +441,13 @@ const dataConstructorMutator = {
 	},
 
 	updateShape_: function() {
-		const oldName =this.getFieldValue("NAME") || ""
-		if (this.itemCount_ && this.getInput("EMPTY")) {
-			this.removeInput("EMPTY")
-		}
-		else if (!this.itemCount_ && !this.getInput("EMPTY")) {
-			this
-				.appendDummyInput("EMPTY")
-				.appendField("data")
-				.appendField(new Blockly.FieldTextInput(
-					this.getFieldValue("NAME")
-				), "NAME")
-				.appendField("of")
-				.appendField(new Blockly.FieldDropdown(
-					retrieveTypeList(this.workspace)
-				), "TYPE")
-		}
-
 		for (let i = 0; i < this.itemCount_; ++i) {
 			if (!this.getInput("DATA" + i)) {
 				const input = this.appendValueInput("DATA" + i)
 					  .setAlign(Blockly.Input.Align.RIGHT)
 					  .setCheck("Type")
 				if (i === 0) {
-					input.appendField("data")
-						.appendField(new Blockly.FieldTextInput(oldName), "NAME")
-						.appendField("of")
-						.appendField(new Blockly.FieldDropdown(
-							retrieveTypeList(this.workspace)
-						), "TYPE")
-						.appendField("with")
+					input.appendField("with")
 				}
 			}
 		}
@@ -429,21 +478,6 @@ const typeDefMutator = {
 		this.updateShape_()
 	},
 
-	saveConnections: function(containerBlock) {
-		let itemBlock = containerBlock.getInputTargetBlock("STACK")
-		let i = 0
-		while (itemBlock) {
-			if (itemBlock.isInsertionMarker()) {
-				itemBlock = itemBlock.getNextBlock()
-				continue
-			}
-			const input = this.getInput("DATA" + i)
-			itemBlock.valueConnection_ = input && input.connection.targetConnection
-			itemBlock = itemBlock.getNextBlock()
-			i++
-		}
-	},
-
 	updateShape_: function() {
 		let typeModel = this.workspace.getTypeMap()[this.typeName_]
 		let typePlaceholders = typeModel["typePlaceholders"]
@@ -451,8 +485,7 @@ const typeDefMutator = {
 			this.removeInput("EMPTY")
 		}
 		else if (!typePlaceholders.length && !this.getInput("EMPTY")) {
-			this
-				.appendDummyInput("EMPTY")
+			this.appendDummyInput("EMPTY")
 				.appendField("type " + this.typeName_)
 		}
 
@@ -464,11 +497,14 @@ const typeDefMutator = {
 				if (i === 0) {
 					input.appendField("type " + this.typeName_ + " with:")
 				}
-				input.appendField(typePlaceholders[i])
+				input.appendField(typePlaceholders[i], "NAME" + i)
+			}
+			else {
+				this.setFieldValue(typePlaceholders[i], "NAME" + i)
 			}
 		}
 
-		for (let i = this.itemCount_; this.getInput("DATA" + i); ++i) {
+		for (let i = typePlaceholders.length; this.getInput("DATA" + i); ++i) {
 			this.removeInput("DATA" + i)
 		}
 	}
@@ -494,45 +530,38 @@ const dataConstructorGetMutator = {
 		this.updateShape_()
 	},
 
-	saveConnections: function(containerBlock) {
-		let itemBlock = containerBlock.getInputTargetBlock("STACK")
-		let i = 0
-		while (itemBlock) {
-			if (itemBlock.isInsertionMarker()) {
-				itemBlock = itemBlock.getNextBlock()
-				continue
-			}
-			const input = this.getInput("DATA" + i)
-			itemBlock.valueConnection_ = input && input.connection.targetConnection
-			itemBlock = itemBlock.getNextBlock()
-			i++
-		}
-	},
-
 	updateShape_: function() {
 		let dataConsModel = this.workspace.getDataConsMap()[this.dcName_]
-		let argumentTypes = dataConsModel.getArgTypes()
+		let argumentTypes = dataConsModel.argTypes
 		if (argumentTypes.length && this.getInput("EMPTY")) {
 			this.removeInput("EMPTY")
 		}
-		else if (!argumentTypes.length && !this.getInput("EMPTY")) {
-			this
-				.appendDummyInput("EMPTY")
-				.appendField(this.dcName_)
-		}
-
-		for (let i = 0; i < argumentTypes.length; ++i) {
-			if (!this.getInput("DATA" + i)) {
-				const input = this.appendValueInput("DATA" + i)
-					  .setAlign(Blockly.Input.Align.RIGHT)
-					  .setCheck("Type")
-				if (i === 0) {
-					input.appendField(this.dcName_)
-				}
+		else if (!argumentTypes.length) {
+			if (!this.getInput("EMPTY")) {
+				this.appendDummyInput("EMPTY")
+					.appendField(this.dcName_, "NAME")
+			}
+			else {
+				this.setFieldValue(this.dcName_, "NAME")
 			}
 		}
 
-		for (let i = this.itemCount_; this.getInput("DATA" + i); ++i) {
+		for (let i = 0; i < argumentTypes.length; ++i) {
+			let input = this.getInput("DATA" + i)
+			if (!input) {
+				input = this.appendValueInput("DATA" + i)
+					  .setAlign(Blockly.Input.Align.RIGHT)
+				if (i === 0) {
+					input.appendField(this.dcName_, "NAME")
+				}
+			}
+			else {
+				this.setFieldValue(this.dcName_, "NAME")
+			}
+			input.setCheck(identifyModelParams(argumentTypes[i]))
+		}
+
+		for (let i = argumentTypes.length; this.getInput("DATA" + i); ++i) {
 			this.removeInput("DATA" + i)
 		}
 	}
@@ -542,6 +571,20 @@ Blockly.Extensions.registerMutator(
 	dataConstructorGetMutator,
 	undefined,
 	[]
+)
+
+const disconnectBlocksMixin = {
+	isolate: function() {
+		for (let i = 0; this.getInput("DATA" + i); ++i) {
+			if (this.getInput("DATA" + i).connection.targetConnection) {
+				this.getInput("DATA" + i).connection.disconnect()
+			}
+		}
+	}
+}
+Blockly.Extensions.registerMixin(
+	"disconnect_blocks_mixin",
+	disconnectBlocksMixin
 )
 
 Blockly.common.defineBlocks(blocks)

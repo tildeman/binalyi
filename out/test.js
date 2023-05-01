@@ -183,6 +183,10 @@ let toolbox = {
 				},
 				{
 					"kind": "block",
+					"type": "logic_wildcard"
+				},
+				{
+					"kind": "block",
 					"type": "logic_ternary"
 				},
 				{
@@ -191,19 +195,7 @@ let toolbox = {
 				},
 				{
 					"kind": "block",
-					"type": "logic_wildcard"
-				},
-				{
-					"kind": "block",
-					"type": "patmat_tree"
-				},
-				{
-					"kind": "block",
-					"type": "patmat_pattern"
-				},
-				{
-					"kind": "block",
-					"type": "patmat_default"
+					"type": "logic_patternmatch"
 				}
 			]
 		},

@@ -10,31 +10,15 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 				"name": "VALUE"
 			},
 			{
-				"type": "field_dropdown",
+				"type": "input_value",
 				"name": "TYPE",
-				"options": [
-					[
-						"big integer",
-						"INTEGER"
-					],
-					[
-						"integer",
-						"INT64"
-					],
-					[
-						"long decimal",
-						"DOUBLE"
-					],
-					[
-						"short decimal",
-						"FLOAT"
-					]
-				]
+				"check": "Type"
 			}
 		],
 		"output": "Number",
 		"style": "math_blocks",
 		"tooltip": "Convert a parsed value into a number of given type.",
+		"inputsInline": true,
 		"helpUrl": ""
 	},
 	{

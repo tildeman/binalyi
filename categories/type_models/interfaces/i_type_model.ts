@@ -9,13 +9,11 @@ export enum TypeKind {
 }
 
 export interface ITypeModel {
-	readonly name: string
-	readonly kind: TypeKind
-	readonly dataConstructors: IDataConstructorModel[]
-	readonly typePlaceholders: string[]
+	id: string
+	name: string
+	kind: TypeKind
+	typePlaceholders: string[]
 
-	addDataConstructor(dataConstructor: IDataConstructorModel): void
-	removeDataConstructor(dataConstructor: IDataConstructorModel): void
 	addTypePlaceholder(typePlaceholder: string): void
 	removeTypePlaceholder(typePlaceholder: string): void
 

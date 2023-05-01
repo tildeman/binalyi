@@ -4,12 +4,12 @@
 - [x] Tuples and accessors
   - [x] Constructor
   - [x] Accessor (first, second)
-- [ ] Datatypes and synonyms
+- [x] Datatypes and synonyms
   - [x] Algebraic types
   - [x] Compound types
   - [x] Type model interface
   - [x] Data constructors
-  - [ ] Sanity checks
+  - [x] Sanity checks
 - [x] Controls
   - [x] Pattern matching
   - [x] Wildcard pattern

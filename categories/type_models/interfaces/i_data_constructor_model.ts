@@ -1,16 +1,8 @@
 import { ITypeModel } from "./i_type_model";
 
 export interface IDataConstructorModel {
+	id: string
 	name: string
 	parentType: ITypeModel
 	argTypes: ITypeModel[]
-
-	getName(): string
-	setName(name: string): void
-
-	getParentType(): ITypeModel
-	setParentType(parentType: ITypeModel): void
-
-	getArgTypes(): ITypeModel[];
-	setArgTypes(argTypes: ITypeModel[]): void
 }

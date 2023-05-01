@@ -1,10 +1,11 @@
-import { IDataConstructorModel } from "./interfaces/i_data_constructor_model";
-import { ITypeModel, TypeKind } from "./interfaces/i_type_model";
+import { IDataConstructorModel } from "./interfaces/i_data_constructor_model"
+import { ITypeModel, TypeKind } from "./interfaces/i_type_model"
+import { utils } from "blockly"
 
 export class TypeModel implements ITypeModel {
+	id: string;
 	name: string;
 	kind: TypeKind;
-	dataConstructors: IDataConstructorModel[];
 	typePlaceholders: string[];
 	listElementType?: ITypeModel;
 	tupleElementTypes?: ITypeModel[];
@@ -12,28 +13,16 @@ export class TypeModel implements ITypeModel {
 	constructor(
 		name: string,
 		kind: TypeKind,
-		dataConstructors: IDataConstructorModel[],
 		typePlaceholders: string[],
 		listElementType?: ITypeModel,
 		tupleElementTypes?: ITypeModel[]
 	) {
-		this.name = name;
-		this.kind = kind;
-		this.dataConstructors = dataConstructors;
-		this.typePlaceholders = typePlaceholders;
-		this.listElementType = listElementType;
-		this.tupleElementTypes = tupleElementTypes;
-	}
-
-	addDataConstructor(dataConstructor: IDataConstructorModel): void {
-		this.dataConstructors.push(dataConstructor);
-	}
-
-	removeDataConstructor(dataConstructor: IDataConstructorModel): void {
-		const index = this.dataConstructors.indexOf(dataConstructor);
-		if (index !== -1) {
-			this.dataConstructors.splice(index, 1);
-		}
+		this.id = utils.idGenerator.genUid()
+		this.name = name
+		this.kind = kind
+		this.typePlaceholders = typePlaceholders
+		this.listElementType = listElementType
+		this.tupleElementTypes = tupleElementTypes
 	}
 
 	addTypePlaceholder(typePlaceholder: string): void {

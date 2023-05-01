@@ -75,7 +75,7 @@
 			"kind": "category",
 			"name": "Types",
 			"categorystyle": "loop_category",
-			"contents":[]
+			"custom": "DATATYPE"
 		},
 		{
 			"kind": "category",
@@ -183,6 +183,10 @@
 				},
 				{
 					"kind": "block",
+					"type": "logic_wildcard"
+				},
+				{
+					"kind": "block",
 					"type": "logic_ternary"
 				},
 				{
@@ -191,19 +195,7 @@
 				},
 				{
 					"kind": "block",
-					"type": "logic_wildcard"
-				},
-				{
-					"kind": "block",
-					"type": "patmat_tree"
-				},
-				{
-					"kind": "block",
-					"type": "patmat_pattern"
-				},
-				{
-					"kind": "block",
-					"type": "patmat_default"
+					"type": "logic_patternmatch"
 				}
 			]
 		},
@@ -369,6 +361,10 @@
 				{
 					"kind": "block",
 					"type": "function_let"
+				},
+				{
+					"kind": "block",
+					"type": "function_partialize"
 				}
 			]
 		},
