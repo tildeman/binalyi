@@ -1,0 +1,17 @@
+body{
+    margin:0;
+}
+
+#workspace{
+    position:absolute;
+    width:50%;
+    height:100%;
+	left:0;
+}
+
+#result{
+    position:absolute;
+    width:50%;
+    height:calc(100% - 10px);
+	right:0;
+}

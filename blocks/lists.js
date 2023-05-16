@@ -129,37 +129,44 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	},
 	{
 		"type": "lists_fold",
-		"message0": "fold with function %1 starting with %2 at the %3 of %4",
+		"message0": "collect with function %1 starting with %2 as the %3 operand %4 on %5",
 		"args0": [
 			{
 				"type": "input_value",
-				"name": "FUNC"
+				"name": "FUNC",
+				"align": "RIGHT"
 			},
 			{
 				"type": "input_value",
-				"name": "INIT"
+				"name": "INIT",
+				"align": "RIGHT"
 			},
 			{
 				"type": "field_dropdown",
 				"name": "DIRECTION",
 				"options": [
 					[
-						"end",
+						"second",
 						"RIGHT"
 					],
 					[
-						"beginning",
+						"first",
 						"LEFT"
 					]
 				]
 			},
 			{
+				"type": "input_dummy",
+				"align": "RIGHT"
+			},
+			{
 				"type": "input_value",
 				"name": "LIST",
+				"align": "RIGHT",
 				"check": "Array"
 			}
 		],
-		"inputsInline": true,
+		"inputsInline": false,
 		"output": null,
 		"style": "list_blocks",
 		"tooltip": "Folds a list into a single value.",

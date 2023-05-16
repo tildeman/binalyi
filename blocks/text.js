@@ -7,7 +7,7 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"args0": [
 			{
 				"type": "input_value",
-				"name": "VALUE",
+				"name": "TEXT",
 				"check": [
 					"String",
 					"Array"

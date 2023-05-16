@@ -1,5 +1,6 @@
 export * as Blockly from "blockly"
 export * as Init from "./categories/initialization"
+export { Haskell as haskellGenerator } from "./generators/haskell.js"
 
 import "./blocks/variables"
 import "./blocks/functions"
