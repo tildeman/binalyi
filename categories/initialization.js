@@ -15,9 +15,21 @@ export function initialize(workspace) {
 		Datatypes.updateModels(workspace)
 	)
 
-	// workspace.addChangeListener(
-	// 	MutatorListener.mutatorOpenListener("function_let_mutatorarg"))
-
-	// workspace.addChangeListener(
-	// 	MutatorListener.mutatorOpenListener("variables_set_functional_mutatorarg"))
+	const flyoutwsp = workspace.getFlyout().getWorkspace()
+	flyoutwsp.typeMap = workspace.typeMap = {
+		types: {},
+		dataConstructors: {},
+	}
+	flyoutwsp.getTypeMap = workspace.getTypeMap = function(){
+		return this.typeMap.types
+	}
+	flyoutwsp.setTypeMap = workspace.setTypeMap = function(typename, value){
+		this.typeMap.types[typename] = value
+	}
+	flyoutwsp.getDataConsMap = workspace.getDataConsMap = function(){
+		return this.typeMap.dataConstructors
+	}
+	flyoutwsp.setDataConsMap = workspace.setDataConsMap = function(typename, value){
+		this.typeMap.dataConstructors[typename] = value
+	}
 }

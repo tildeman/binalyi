@@ -3,7 +3,6 @@ import {ObservableNotProcedureModel} from "../categories/procedure_models_for_no
 import {ObservableNotParameterModel} from "../categories/procedure_models_for_not_procedures/observable_parameter_model"
 import {triggerProceduresUpdate} from "../categories/procedure_models_for_not_procedures/update_procedures"
 
-// That stupid bug still lingers...
 // TODO: The names on each model in a workspace's procedure map should be unique
 // TODO: Name collisions must not occur in a workspace
 // TODO: Variable deletion should delete all the associated getters and setters
@@ -114,8 +113,6 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	}
 ])
 
-// Variable definition get definition (def get def) is a stupid name for a mixin
-// Therefore it's shortened to DGD
 const variableDGDMixin = function() {
 	const mixin = {
 		model_: null,
@@ -126,7 +123,7 @@ const variableDGDMixin = function() {
 		},
 
 		isProcedureDef() {
-			return true // Haven't tested this for incompatibility with built-in procs.
+			return true
 		},
 
 		getVars: function() {
@@ -157,11 +154,6 @@ Blockly.Extensions.register(
 	"variable_dgd_mixin",
 	variableDGDMixin
 )
-
-// Blockly procedures fall short to first-class curried higher-order functions
-// TODO: make a proper model for these variables, not just a global object of stuff.
-// Structure: {"<workspaceId>": {"<name>": [{"name","paramId"}]}}
-const CALLABLE_VARIABLES = Object.create(null)
 
 const variableUpdateShapeMixin = {
 	doVariableUpdate: function() {
@@ -267,8 +259,7 @@ const variableDefMutator = {
 		console.log(this.model_.getId())
 		if (procedureId && procedureId != this.model_.getId() &&
 			map.has(procedureId) &&
-			(this.isInsertionMarker() /* ||
-										 this.noBlockHasClaimedModel_(procedureId)*/)) {
+			(this.isInsertionMarker())) {
 			console.log("yes!")
 			if (map.has(this.model_.getId())) {
 				map.delete(this.model_.getId())
@@ -319,8 +310,6 @@ const variableDefMutator = {
 	},
 
 	compose: function(containerBlock) {
-		// Blockly has procedures; procedures have models
-		// When life gives you janky abstractions, pick something else.
 		const model = this.getProcedureModel()
 		const count = Object.keys(model).length
 		console.log(this.getFieldValue("VAR"))
@@ -350,9 +339,6 @@ Blockly.Extensions.registerMutator(
 	["variables_set_functional_mutatorarg"]
 )
 
-// Mutator arguments that also declare variable names
-// Substantial amounts of code are taken from Blockly's source code
-
 const validateVariableParamMixin = {
 
 	validator_: function(varName) {
@@ -371,15 +357,12 @@ const validateVariableParamMixin = {
 			if (blocks[i].id === this.getSourceBlock().id) {
 				continue
 			}
-			// Blockly seems to enforce case-insensitive names
-			// Might be great for code generation
 			const otherVar = blocks[i].getFieldValue("NAME")
 			if (otherVar && otherVar.toLowerCase() === caselessName) {
 				return null
 			}
 		}
-		
-		// Blocks in mutator's flyout don't deserve variable declarations
+
 		if (sourceBlock.isInFlyout) {
 			return varName
 		}
@@ -398,8 +381,6 @@ const validateVariableParamMixin = {
 		return varName
 	},
 
-	// If your answer is wrong, modify the answer key in your favor
-	// say someone doesn't understand what "soccer is", it's his problem now.
 	deleteImmediateVars_: function(newText) {
 		const outerWs = Blockly.Mutator.findParentWs(this.getSourceBlock().workspace)
 		if (!outerWs) {
@@ -465,7 +446,7 @@ const variableCGDMixin = function() {
 		},
 
 		isProcedureDef() {
-			return true // Haven't tested this for incompatibility with built-in procs.
+			return true
 		},
 
 		getVars: function() {
@@ -575,10 +556,6 @@ const variableCallMutator = {
 		if (this.getInput("EXPR")) {
 			this.removeInput("EXPR")
 		}
-
-		//const procedureModel = this.getProcedureModel().getParameters().map(
-		//	(p) => p.getName()
-		//)
 
 		for (let i = 0; i < this.itemCount_; ++i) {
 			if (!this.getInput("ARG" + i)) {

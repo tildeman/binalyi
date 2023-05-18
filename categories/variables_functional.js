@@ -24,9 +24,6 @@ export function functionalVarFlyoutBlocks(workspace) {
 						"name": mostRecentVariable.name,
 						"type": "functional"
 					}
-				},
-				"extraState": {
-					"name": mostRecentVariable.name
 				}
 			})
 		}
@@ -44,7 +41,7 @@ export function functionalVarFlyoutBlocks(workspace) {
 						}
 					},
 					"extraState": {
-						"name": variable.name
+						"paramCount": variable.paramCount_ || 0
 					}
 				})
 				jsonList.push({

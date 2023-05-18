@@ -7,6 +7,7 @@ export const Haskell = new Blockly.Generator("Haskell")
 Haskell.ORDER_ATOMIC = 0
 Haskell.ORDER_FUNCTION_PARAM = 1
 Haskell.ORDER_FUNCTION_CALL = 2
+Haskell.ORDER_COMPOSITION = 3
 Haskell.ORDER_EXPONENTIATION = 4
 Haskell.ORDER_MULTIPLICATIVE = 5
 Haskell.ORDER_ADDITIVE = 6
@@ -16,6 +17,7 @@ Haskell.ORDER_LIST_CONCAT = 10
 Haskell.ORDER_RELATIONAL = 11
 Haskell.ORDER_LOGICAL_AND = 13
 Haskell.ORDER_LOGICAL_OR = 14
+Haskell.ORDER_APPLICATION = 16
 Haskell.ORDER_NONE = +84 // Superficial purposes.
 
 // Miscellaneous functions
@@ -298,7 +300,6 @@ Haskell["math_arithmetic"] = function(block) {
 		"POWER": [" ** ", Haskell.ORDER_EXPONENTIATION],
 	}
 	const tuple = OPERATORS[block.getFieldValue("OP")]
-	console.log(tuple)
 	const operator = tuple[0]
 	const order = tuple[1]
 	const argument0 = Haskell.valueToCode(block, "A", order) || "0"
@@ -466,3 +467,25 @@ Haskell["tuples_pair"] = function(block) {
 	return [code, Haskell.ORDER_FUNCTION_CALL]
 }
 
+// Blocks for functions
+
+Haskell["function_compose"] = function(block) {
+	const func1 = Haskell.valueToCode(block, "A", Haskell.ORDER_COMPOSITION) || "id"
+	const func2 = Haskell.valueToCode(block, "B", Haskell.ORDER_COMPOSITION) || "id"
+	const code = func1 + " . " + func2
+	return [code, Haskell.ORDER_COMPOSITION]
+}
+
+Haskell["function_apply"] = function(block) {
+	const func1 = Haskell.valueToCode(block, "A", Haskell.ORDER_APPLICATION) || "id"
+	const func2 = Haskell.valueToCode(block, "B", Haskell.ORDER_APPLICATION) || "id"
+	const code = func1 + " $ " + func2
+	return [code, Haskell.ORDER_APPLICATION]
+}
+
+Haskell["function_partialize"] = function(block) {
+	// Most functional programmers would call this a section
+	// as in a section of "1 + something" or "map a funcion onto something"
+	// There is no Python equivalent of this, sadly
+	return [" ", Haskell.ORDER_ATOMIC]
+}

@@ -67,7 +67,10 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"style": "variable_blocks",
 		"tooltip": "Returns the value of this variable with provided arguments.",
 		"helpUrl": "",
-		"mutator": "variable_def_mutator"
+		"mutator": "variable_def_mutator",
+		"extensions": [
+			"load_param_count"
+		]
 	}
 ])
 
@@ -159,6 +162,7 @@ const variableDefMutator = {
 			this.removeInput("EXPR")
 		}
 
+		// Spaghetti code
 		for (let i = 0; i < this.paramCount_; ++i) {
 			if (!this.getInput("ADD" + i)) {
 				const input = this.appendValueInput("ADD" + i)
@@ -215,6 +219,10 @@ const variableDefMutator = {
 					)
 			}
 			expr.appendField("as")
+
+			const varId = this.getFieldValue("VAR")
+			const variable = this.workspace.getVariableById(varId)
+			if (variable) variable.paramCount_ = this.paramCount_
 		}
 		else if (!this.paramCount_) {
 			this.appendDummyInput("EXPR")
@@ -235,6 +243,14 @@ Blockly.Extensions.registerMutator(
 	variableDefMutator,
 	undefined,
 	["variables_get_functional_mutatorarg"]
+)
+
+function loadParamCount() {
+	this.updateShape_()
+}
+Blockly.Extensions.register(
+	"load_param_count",
+	loadParamCount
 )
 
 Blockly.common.defineBlocks(blocks)

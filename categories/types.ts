@@ -33,8 +33,6 @@ type DataConstructorGetBlock = Blockly.BlockSvg & {
 	updateShape_: () => void
 }
 
-var callback_idempotence = false
-
 // Let's start, shall we?
 
 function typeFlyoutBlocks(
@@ -169,27 +167,6 @@ function updateDynamicCategory(
 
 function addTypeCallback(bflyout: Blockly.FlyoutButton): void {
 	const workspace = bflyout.getTargetWorkspace() as TypeWorkspace
-	const flyoutwsp = workspace.getFlyout().getWorkspace() as TypeWorkspace
-	if (!callback_idempotence){
-		flyoutwsp.typeMap = workspace.typeMap = {
-			types: {},
-			dataConstructors: {},
-		}
-		flyoutwsp.getTypeMap = workspace.getTypeMap = function(){
-			return this.typeMap.types
-		}
-		flyoutwsp.setTypeMap = workspace.setTypeMap = function(typename, value){
-			this.typeMap.types[typename] = value
-		}
-		flyoutwsp.getDataConsMap = workspace.getDataConsMap = function(){
-			return this.typeMap.dataConstructors
-		}
-		flyoutwsp.setDataConsMap = workspace.setDataConsMap = function(typename, value){
-			this.typeMap.dataConstructors[typename] = value
-		}
-	}
-	callback_idempotence = true
-
 	let typeName
 
 	while (true) {
