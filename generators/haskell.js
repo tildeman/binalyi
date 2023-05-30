@@ -593,7 +593,6 @@ Haskell["math_single"] = function(block) {
 	const operator = block.getFieldValue("OP")
 	let code
 	let arg
-	Haskell.definitions_["import_math"] = "import math"
 	if (operator === "SIN" || operator === "COS" || operator === "TAN") {
 		arg = Haskell.valueToCode(block, "NUM", Haskell.ORDER_MULTIPLICATIVE)
 			|| "0"
@@ -822,7 +821,7 @@ Haskell["function_let"] = function(block) {
 	let n = 0
 	let code = "let", branchCode, conditionCode
 	const expression =
-		  Haskell.valueToCode(block, "EXP" + n, Haskell.ORDER_NONE) || "()"
+		  Haskell.valueToCode(block, "EXP", Haskell.ORDER_NONE) || "()"
 	do {
 		conditionCode =
 			Haskell.valueToCode(block, "LET" + n, Haskell.ORDER_NONE) || "_"
