@@ -6,14 +6,14 @@ import { ITypeModel, TypeKind } from "./type_models/interfaces/i_type_model"
 import { ITypeMap } from "./type_models/interfaces/i_type_map"
 
 // Type declarations for related blocks & types
-type TypeWorkspaceExtensions = {
+export type TypeWorkspaceExtensions = {
 	typeMap: ITypeMap
 	getTypeMap: () => { [typeName: string]: ITypeModel }
 	setTypeMap: (typename: string, value: ITypeModel) => void
 	getDataConsMap: () => { [dcName: string]: IDataConstructorModel }
 	setDataConsMap: (typename: string, value: IDataConstructorModel) => void
 }
-type TypeWorkspace = Blockly.WorkspaceSvg & TypeWorkspaceExtensions
+export type TypeWorkspace = Blockly.WorkspaceSvg & TypeWorkspaceExtensions
 
 type TypeBlock = Blockly.BlockSvg & {
 	isolate: () => void,

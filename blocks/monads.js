@@ -35,10 +35,6 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 					[
 						"\u21b7",
 						"THEN"
-					],
-					[
-						"\u2190",
-						"DOLET"
 					]
 				]
 			},

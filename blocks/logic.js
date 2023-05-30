@@ -394,8 +394,8 @@ const CaseMutator = {
 		}
 		// Rebuild block.
 		for (let i = 1; i <= this.elseifCount_; ++i) {
-			this.appendValueInput("CASE" + i).setCheck("Boolean")
-				.appendField("case").setAlign(Blockly.Input.Align.RIGHT)
+			this.appendValueInput("CASE" + i).appendField("case")
+				.setAlign(Blockly.Input.Align.RIGHT)
 			this.appendValueInput("RESULT" + i).appendField("run")
 				.setAlign(Blockly.Input.Align.RIGHT)
 		}

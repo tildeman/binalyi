@@ -7,7 +7,7 @@ import {triggerProceduresUpdate} from "../categories/procedure_models_for_not_pr
 // TODO: Name collisions must not occur in a workspace
 // TODO: Variable deletion should delete all the associated getters and setters
 // TODO: Pair the variable name with the value of the variable field
-// TODO: Automatically reference variables in the getter, initially or on change
+// TODO: Automatically reference variable parameters in the getter, initially or on change
 
 const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	{
@@ -157,7 +157,6 @@ Blockly.Extensions.register(
 
 const variableUpdateShapeMixin = {
 	doVariableUpdate: function() {
-		// Variable names do not collide
 		this.updateParameters_()
 		this.updateMutator_()
 	},
@@ -167,7 +166,6 @@ const variableUpdateShapeMixin = {
 			(p) => p.getName())
 		const paramString = (params.length ? `with: ${params.join(", ")} ` : "") + "as"
 
-		// "Firing is unnecessary for event-deterministic fields" - Google
 		Blockly.Events.disable()
 		try {
 			this.setFieldValue(paramString, 'PARAMS')
@@ -487,7 +485,7 @@ const variableCallMutator = {
 		if (!this.model_) this.model_ = this.findNotProcedureModel_(this.name_, []);
 
 		this.updateShape_()
-	}, // This is going to be a real headache
+	},
 
 	decompose: function(workspace) {
 		const containerBlock = workspace.newBlock("variables_get_functional_container")

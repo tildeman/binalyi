@@ -42,8 +42,6 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 				"name": "EXPR"
 			}
 		],
-		"previousStatement": "Decl",
-		"nextStatement": "Decl",
 		"style": "variable_blocks",
 		"tooltip": "Declares this variable (with parameters) to be equal to the input. Do not redeclare or dire things will happen.",
 		"helpUrl": "",
