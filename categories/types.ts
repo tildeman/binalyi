@@ -4,6 +4,15 @@ import { TypeModel } from "./type_models/observabletypemodel"
 import { IDataConstructorModel } from "./type_models/interfaces/i_data_constructor_model"
 import { ITypeModel, TypeKind } from "./type_models/interfaces/i_type_model"
 import { ITypeMap } from "./type_models/interfaces/i_type_map"
+import { ButtonInfo, FlyoutItemInfo, FlyoutItemInfoArray } from "blockly/core/utils/toolbox";
+import { initialize } from "../miscellaneous/initialization";
+import { Abstract } from "blockly/core/events/events_abstract";
+import { BlockBase } from "blockly/core/events/events_block_base";
+import { BlockChange } from "blockly/core/events/events_block_change";
+import { BlockCreate } from "blockly/core/events/events_block_create";
+import { BlockDelete } from "blockly/core/events/events_block_delete";
+import { BlockDrag } from "blockly/core/events/events_block_drag";
+import { BlockAny } from "../miscellaneous/mutated_blocks";
 
 // Type declarations for related blocks & types
 export type TypeWorkspaceExtensions = {
@@ -15,29 +24,52 @@ export type TypeWorkspaceExtensions = {
 }
 export type TypeWorkspace = Blockly.WorkspaceSvg & TypeWorkspaceExtensions
 
-type TypeBlock = Blockly.BlockSvg & {
+export type TypeBlock = Blockly.BlockSvg & {
 	isolate: () => void,
 	typeName_: string,
-	updateShape_: () => void
+	updateShape_: () => void,
+	workspace: TypeWorkspace
 }
 
-type DataConstructorBlock = Blockly.BlockSvg & {
+export type DataConstructorBlock = Blockly.BlockSvg & {
 	isolate: () => void,
 	updateShape_: () => void,
-	renameDataConstructor: () => void
+	renameDataConstructor: () => void,
+	workspace: TypeWorkspace
 }
 
-type DataConstructorGetBlock = Blockly.BlockSvg & {
+export type DataConstructorGetBlock = Blockly.BlockSvg & {
 	isolate: () => void,
 	dcName_: string,
-	updateShape_: () => void
+	updateShape_: () => void,
+	workspace: TypeWorkspace
+}
+
+// Some more type guards, and we're good to go!
+
+function isTypeBlock(block: Blockly.BlockSvg): block is TypeBlock {
+	return "isolate" in block && "typeName_" in block && "updateShape_" in block;
+}
+
+function isDataConstructorBlock(block: Blockly.Block): block is DataConstructorBlock {
+	return "isolate" in block && "renameDataConstructor" in block && "updateShape_" in block;
+}
+
+function isDataConstructorGetBlock(block: Blockly.Block): block is DataConstructorGetBlock {
+	return "isolate" in block && "dcName_" in block && "updateShape_" in block;
+}
+
+export function isTypeWorkspace(workspace: Blockly.Workspace): workspace is TypeWorkspace {
+	return "typeMap" in workspace &&
+		"getTypeMap" in workspace && "setTypeMap" in workspace &&
+		"getDataConsMap" in workspace && "setDataConsMap" in workspace;
 }
 
 // Let's start, shall we?
 
 function typeFlyoutBlocks(
-	workspace: TypeWorkspace): Blockly.utils.toolbox.FlyoutDefinition {
-	let jsonList: any[] = [
+	workspace: TypeWorkspace): FlyoutItemInfoArray {
+	let jsonList: FlyoutItemInfo[] = [
 		{
 			"kind": "block",
 			"type": "types_primitive"
@@ -66,12 +98,12 @@ function typeFlyoutBlocks(
 			"inputs": {
 				"SUBTYPE": {
 					"block": {
-						"kind": "block",
 						"type": "types_primitive",
 						"fields": {
 							"TYPE": "Char"
 						}
-					}
+					},
+					"shadow": undefined
 				}
 			}
 		},
@@ -151,11 +183,11 @@ function typeFlyoutBlocks(
 
 function updateDynamicCategory(
 	workspace: TypeWorkspace): Blockly.utils.toolbox.FlyoutDefinition {
-	let toolbox  = []
-	const button = {
+	let toolbox: FlyoutItemInfoArray = []
+	const button: ButtonInfo = {
 		"kind": "button",
 		"text": "Create type...",
-		"callbackKey": "DATATYPE"
+		"callbackkey": "DATATYPE"
 	}
 	toolbox.push(button)
 
@@ -166,33 +198,36 @@ function updateDynamicCategory(
 }
 
 function addTypeCallback(bflyout: Blockly.FlyoutButton): void {
-	const workspace = bflyout.getTargetWorkspace() as TypeWorkspace
-	let typeName
+	const workspace = bflyout.getTargetWorkspace();
+	if (isTypeWorkspace(workspace)){
+		let typeName: string | null
 
-	while (true) {
-		typeName = prompt("New type name:")
+		while (true) {
+			typeName = prompt("New type name:")
 
-		if (!typeName) {
-			return // User probably clicked on it by accident
+			if (!typeName) {
+				return // User probably clicked on it by accident
+			}
+			if (workspace.getTypeMap()[typeName]) {
+				alert("A type named '" + typeName + "' already exists.")
+			}
+			else if (workspace.getDataConsMap()[typeName]) {
+				alert("A data constructor named '" + typeName + "' already exists.")
+			}
+			else break
 		}
-		if (workspace.getTypeMap()[typeName]) {
-			alert("A type named '" + typeName + "' already exists.")
-		}
-		else if (workspace.getDataConsMap()[typeName]) {
-			alert("A data constructor named '" + typeName + "' already exists.")
-		}
-		else break
+
+		// Add the type to the workspace's type map
+		workspace.setTypeMap(typeName,new TypeModel(
+			typeName,
+			4,
+			[]
+		))
+
+		// Update the dynamic category to include the new type
+		const toolbox = workspace.getToolbox()
+		if (toolbox) toolbox.refreshSelection()
 	}
-
-	// Add the type to the workspace's type map
-	workspace.setTypeMap(typeName,new TypeModel(
-		typeName,
-		4,
-		[]
-	))
-
-	// Update the dynamic category to include the new type
-	workspace.getToolbox().refreshSelection()
 }
 
 function generateModelParams(block: Blockly.Block | null): ITypeModel {
@@ -227,7 +262,7 @@ function generateModelParams(block: Blockly.Block | null): ITypeModel {
 	}
 	else if (block.type == "types_tuple") {
 		let inner_typemods: TypeModel[] = [], i = 0
-		let templates = []
+		let templates: string[] = []
 		while (block.getInput("ADD" + i)) {
 			inner_typemods.push(
 				generateModelParams(block.getInputTargetBlock("ADD" + i))
@@ -252,7 +287,7 @@ function generateModelParams(block: Blockly.Block | null): ITypeModel {
 	}
 	else if (block.type == "types_type") {
 		let inner_typemods: TypeModel[] = [], i = 0
-		let templates = []
+		let templates: string[] = []
 		while (block.getInput("DATA" + i)) {
 			inner_typemods.push(
 				generateModelParams(block.getInputTargetBlock("DATA" + i))
@@ -280,6 +315,7 @@ function generateModelParams(block: Blockly.Block | null): ITypeModel {
 }
 
 export function identifyModelParams(model: ITypeModel | null) : (string | string[] | null) {
+	if (!model) return null;
 	switch (model.kind) {
 		case TypeKind.Placeholder:
 			return null
@@ -307,92 +343,111 @@ export function identifyModelParams(model: ITypeModel | null) : (string | string
 			// intuitive in some sense.
 			return "Tuple"
 	}
+	return null;
 }
 
 function updateTypeModels(block: Blockly.Block): void {
 	// Handles the modified workspace with extra functions for datatypes.
-	const workspace = block.workspace as TypeWorkspace
-	const typemodel = workspace.getTypeMap()[block.getFieldValue("TYPE")]
-	const dcname = block.getFieldValue("NAME")
+	const workspace = block.workspace;
+	if (!isTypeWorkspace(workspace)) {
+		initialize(workspace as TypeWorkspace);
+	}
+	if (!isTypeWorkspace(workspace)) {
+		throw Error("Workspace did not initialize properly with types");
+	}
+	const typemodel = workspace.getTypeMap()[block.getFieldValue("TYPE")];
+	const dcname = block.getFieldValue("NAME");
 	const ret = new DataConstructorModel(
 		dcname,
 		typemodel,
 		[]
-	)
-	let argtypes = ret.argTypes, placeholders = {}, cdc : TypeModel
-	let i = 0
+	);
+	let argtypes = ret.argTypes, placeholders = {}, cdc : TypeModel;
+	let i = 0;
 	while (block.getInput("DATA" + i)) {
-		cdc = generateModelParams(block.getInputTargetBlock("DATA" + i))
+		cdc = generateModelParams(block.getInputTargetBlock("DATA" + i));
 		cdc.typePlaceholders.forEach((tph) => {
-			placeholders[tph] = "Yes"
-		})
-		argtypes.push(cdc)
-		i++
+			placeholders[tph] = "Yes";
+		});
+		argtypes.push(cdc);
+		i++;
 	}
-	typemodel.typePlaceholders = Object.keys(placeholders)
-	workspace.setDataConsMap(dcname, ret)
+	typemodel.typePlaceholders = Object.keys(placeholders);
+	workspace.setDataConsMap(dcname, ret);
 
 	// Now update the associated blocks
 	// This is basically satirically clean code
 	let dataConstructorBuildList =
-		workspace.getBlocksByType("types_dc_get", false) as DataConstructorBlock[]
-	for (const dataConstructorBuildBlock of dataConstructorBuildList) {
-		dataConstructorBuildBlock.updateShape_()
+		workspace.getBlocksByType("types_dc_get", false);
+	if (dataConstructorBuildList.every(isDataConstructorBlock)) {
+		for (const dataConstructorBuildBlock of dataConstructorBuildList) {
+			dataConstructorBuildBlock.updateShape_();
+		}
 	}
 
-	let typeBuildList = workspace.getBlocksByType("types_type", false) as TypeBlock[]
-	for (const typeBuildBlock of typeBuildList) {
-		typeBuildBlock.updateShape_()
+	let typeBuildList = workspace.getBlocksByType("types_type", false);
+	if (typeBuildList.every(isTypeBlock)) {
+		for (const typeBuildBlock of typeBuildList) {
+			typeBuildBlock.updateShape_();
+		}
 	}
 }
 
-function updateDataConsNames(workspace: TypeWorkspace, oldName: string, newName: string)
-: void {
-	let dataConstructorBuildList: any = workspace.getBlocksByType("types_dc_get", false)
+function updateDataConsNames(workspace: TypeWorkspace, oldName: string, newName: string): void {
+	let dataConstructorBuildList = workspace.getBlocksByType("types_dc_get", false) as DataConstructorGetBlock[];
 	for (const dataConstructorBuildBlock of dataConstructorBuildList) {
 		if (dataConstructorBuildBlock.dcName_ === oldName) {
-			dataConstructorBuildBlock.dcName_ = newName
+			dataConstructorBuildBlock.dcName_ = newName;
+			dataConstructorBuildBlock.updateShape_();
 		}
 	}
 }
 
 function removeDataCons(
 	workspace: TypeWorkspace, block: Blockly.serialization.blocks.State) : void {
-	const name = block["fields"]["NAME"]
+	const fields = block["fields"];
+	if (!fields) return;
+	const name = fields["NAME"];
 	let dataConstructorBuildList =
-		workspace.getBlocksByType("types_dc_get", false) as DataConstructorGetBlock[]
-	for (const dataConstructorBuildBlock of dataConstructorBuildList) {
-		if (dataConstructorBuildBlock.dcName_ === name) {
-			dataConstructorBuildBlock.isolate()
-			dataConstructorBuildBlock.dispose()
+		workspace.getBlocksByType("types_dc_get", false);
+	if (dataConstructorBuildList.every(isDataConstructorGetBlock)) {
+		for (const dataConstructorBuildBlock of dataConstructorBuildList) {
+			if (dataConstructorBuildBlock.dcName_ === name) {
+				dataConstructorBuildBlock.isolate();
+				dataConstructorBuildBlock.dispose();
+			}
 		}
 	}
-	delete workspace.getDataConsMap()[name]
+	delete workspace.getDataConsMap()[name];
 }
 
 export function removeType(workspace: TypeWorkspace, typeName: string): void {
 	// Step 1: dissociate all type blocks of the chosen type
-	let typeBuildList = workspace.getBlocksByType("types_type", false) as TypeBlock[]
-	for (const typeBuildBlock of typeBuildList) {
-		if (typeBuildBlock.typeName_ === typeName) {
-			typeBuildBlock.isolate()
-			typeBuildBlock.dispose()
+	let typeBuildList = workspace.getBlocksByType("types_type", false);
+	if (typeBuildList.every(isTypeBlock)) {
+		for (const typeBuildBlock of typeBuildList) {
+			if (typeBuildBlock.typeName_ === typeName) {
+				typeBuildBlock.isolate();
+				typeBuildBlock.dispose();
+			}
 		}
 	}
 	
 	// Step 2: dissociate all data constructor defintions of the chosen type
 	// Step 3: dissociate all data constructor blocks of the chosen type
 	let dataConstructorBuildList =
-		workspace.getBlocksByType("types_dc_def", false) as TypeBlock[]
-	for (const dataConstructorBuildBlock of dataConstructorBuildList) {
-		if (dataConstructorBuildBlock.getFieldValue("TYPE") === typeName) {
-			dataConstructorBuildBlock.isolate()
-			dataConstructorBuildBlock.dispose()
+		workspace.getBlocksByType("types_dc_def", false);
+	if (dataConstructorBuildList.every(isDataConstructorBlock)) {
+		for (const dataConstructorBuildBlock of dataConstructorBuildList) {
+			if (dataConstructorBuildBlock.getFieldValue("TYPE") === typeName) {
+				dataConstructorBuildBlock.isolate();
+				dataConstructorBuildBlock.dispose();
+			}
 		}
 	}
 
 	// Step 4: remove the entries within the model
-	delete workspace.getTypeMap()[typeName]
+	delete workspace.getTypeMap()[typeName];
 }
 
 export function typeFlyout(
@@ -400,119 +455,126 @@ export function typeFlyout(
 	workspace.registerButtonCallback(
 		"DATATYPE",
 		addTypeCallback
-	)
+	);
 
-	return updateDynamicCategory(workspace)
+	return updateDynamicCategory(workspace);
 }
 
-export function updateModels(workspace: TypeWorkspace): ((event: any) => void) {
+export function updateModels(workspace: TypeWorkspace): ((event: BlockAny) => void) {
 	return function(event){
 		// Comparing strings is never straightforward, but at least it's legible.
 		if (event.type === Blockly.Events.BLOCK_MOVE) {
-			let parentBlockId = event.newParentId
-			if (!parentBlockId) parentBlockId = event.oldParentId
-			if (!parentBlockId) return // FOLD!
-			const block=workspace.getBlockById(parentBlockId)
-			if (!block) return
-			const rootBlock = block.getRootBlock()
-			if (rootBlock.type != "types_dc_def") return
-			updateTypeModels(rootBlock)
+			let parentBlockId = event.newParentId;
+			if (!parentBlockId) parentBlockId = event.oldParentId;
+			if (!parentBlockId) return; // FOLD!
+			const block=workspace.getBlockById(parentBlockId);
+			if (!block) return;
+			const rootBlock = block.getRootBlock();
+			if (rootBlock.type != "types_dc_def") return;
+			updateTypeModels(rootBlock);
 		}
 		else if (event.type === Blockly.Events.BLOCK_CHANGE) {
-			if (!event.blockId) return
-			const block=workspace.getBlockById(event.blockId)
-			if (!block) return
+			if (!event.blockId) return;
+			const block = workspace.getBlockById(event.blockId);
+			if (!block) return;
 			switch (block.type) {
 				case "types_dc_def":
 					if (event.name === "NAME") {
 						// You are dealing with a data constructor name change
-						delete workspace.getDataConsMap()[event.oldValue]
-						updateDataConsNames(workspace, event.oldValue, event.newValue)
+						workspace.getDataConsMap()[event.newValue as string] =
+							workspace.getDataConsMap()[event.oldValue as string];
+						delete workspace.getDataConsMap()[event.oldValue as string];
+						updateDataConsNames(workspace, event.oldValue as string, event.newValue as string);
 					}
-					updateTypeModels(block)
-					break
+					updateTypeModels(block);
+					break;
 				case "types_placeholder": // Placeholder changed, generate a new one.
 				case "types_primitive": // Typechecks modified.
-					let rootBlock = block.getRootBlock()
-					if (rootBlock.type != "types_dc_def") break
-					updateTypeModels(rootBlock)
+					let rootBlock = block.getRootBlock();
+					if (rootBlock.type != "types_dc_def") break;
+					updateTypeModels(rootBlock);
+					break;
 				default:
-					break
+					break;
 			}
 		}
 		else if (event.type === Blockly.Events.BLOCK_CREATE) {
-			event.ids && event.ids.forEach(s => {
-				const block = workspace.getBlockById(s)
-				if (block.type == "types_dc_def") updateTypeModels(block)
+			event.ids && event.ids.forEach((s: string) => {
+				const block = workspace.getBlockById(s);
+				if (block && block.type == "types_dc_def") updateTypeModels(block);
 			})
 		}
 		else if (event.type === Blockly.Events.BLOCK_DELETE) {
-			let blockJson = event.oldJson
-			if (blockJson["type"] == "types_dc_def") removeDataCons(workspace, blockJson)
+			let blockJson = event.oldJson || { type: "" };
+			if (blockJson.type == "types_dc_def") removeDataCons(workspace, blockJson);
 		}
 	}
 }
 
 export function nameIsUsed(name: string, workspace: TypeWorkspace, opt_exclude?: Blockly.Block) : boolean {
-	let dataConstructorBuildList = workspace.getBlocksByType("types_dc_def", false)
+	let dataConstructorBuildList = workspace.getBlocksByType("types_dc_def", false);
 	for (const dataConstructorBuildBlock of dataConstructorBuildList) {
 		if (dataConstructorBuildBlock.getFieldValue("NAME") === name &&
 			dataConstructorBuildBlock != opt_exclude) {
-			return true
+			return true;
 		}
 	}
 
 	// Checking blocks may be enough, but we need to be sure.
-	let dataConstructorMap = workspace.getDataConsMap()
+	let dataConstructorMap = workspace.getDataConsMap();
 	let excludeModel = opt_exclude &&
-		dataConstructorMap[opt_exclude.getFieldValue("NAME")]
+		dataConstructorMap[opt_exclude.getFieldValue("NAME")];
 	for (const model in dataConstructorMap) {
-		if (dataConstructorMap[model] === excludeModel) continue
-		if (dataConstructorMap[model].name === name) return true
+		if (dataConstructorMap[model] === excludeModel) continue;
+		if (dataConstructorMap[model].name === name) return true;
 	}
 
 	// We also don't want data constructor names to collide with type names.
 	for (const typeName in workspace.getTypeMap()) {
-		if (typeName === name) return true
+		if (typeName === name) return true;
 	}
 
 	// Then and only then return false.
-	return false
+	return false;
 }
 
 function nameIsLegal(name: string, workspace: TypeWorkspace, opt_exclude?: Blockly.Block): boolean {
-	return !nameIsUsed(name, workspace, opt_exclude)
+	return !nameIsUsed(name, workspace, opt_exclude);
 }
 
 export function findLegalName(name: string, block: Blockly.Block): string {
 	if (block.isInFlyout) {
 		// Flyouts can have multiple data constructors called "Something".
-		return name
+		return name;
 	}
-	name = name || "Something"
-	while (!nameIsLegal(name, (block.workspace as TypeWorkspace), block)) {
-		// Collision with another data constructor.
-		const r = name.match(/^(.*?)(\d+)$/)
-		if (!r) {
-			name += "2"
-		} else {
-			name = r[1] + (parseInt(r[2]) + 1)
+	name = name || "Something";
+	const workspace = block.workspace;
+	if (isTypeWorkspace(workspace)) {
+		while (!nameIsLegal(name, workspace, block)) {
+			// Collision with another data constructor.
+			const r = name.match(/^(.*?)(\d+)$/);
+			if (!r) {
+				name += "2";
+			} else {
+				name = r[1] + (parseInt(r[2]) + 1);
+			}
 		}
 	}
-	return name
+	return name;
 }
 
 export function rename(this: Blockly.Field, name: string): string {
-	const block = this.getSourceBlock() as DataConstructorBlock
+	const block = this.getSourceBlock();
+	if (!block || !isDataConstructorBlock(block)) return "";
 
 	// Strip leading and trailing whitespace.  Beyond this, all names are legal.
 	// Later in the code I'd have to enforce the first letter being capitalized.
-	name = name.trim()
+	name = name.trim();
 
-	const legalName = findLegalName(name, block)
-	const oldName = this.getValue()
+	const legalName = findLegalName(name, block);
+	const oldName = this.getValue();
 	if (oldName !== name && oldName !== legalName) {
-		block.renameDataConstructor()
+		block.renameDataConstructor();
 	}
-	return legalName
+	return legalName;
 }

@@ -1,5 +1,9 @@
 import * as Blockly from "blockly"
 
+export type VariableModelWithParamCount = Blockly.VariableModel & {
+	paramCount_?: number;
+}
+
 export function generateVariableFieldDom(variableModel) {
 	const field = Blockly.utils.xml.createElement("field")
 	field.setAttribute("name", "VAR")
@@ -10,9 +14,9 @@ export function generateVariableFieldDom(variableModel) {
 	return field
 }
 
-export function functionalVarFlyoutBlocks(workspace) {
+export function functionalVarFlyoutBlocks(workspace: Blockly.Workspace) {
 	const variableModelList = workspace.getVariablesOfType("functional")
-	const jsonList = []
+	const jsonList: any[] = []
 	if (variableModelList.length > 0) {
 		const mostRecentVariable = variableModelList[variableModelList.length - 1]
 		if (Blockly.Blocks["variables_set_functional"]) {
@@ -30,7 +34,7 @@ export function functionalVarFlyoutBlocks(workspace) {
 
 		if (Blockly.Blocks["variables_get_functional"]) {
 			variableModelList.sort(Blockly.VariableModel.compareByName)
-			for (let i = 0, variable; variable = variableModelList[i]; ++i) {
+			for (let i = 0, variable: VariableModelWithParamCount; variable = variableModelList[i]; ++i) {
 				jsonList.push({
 					"kind": "block",
 					"type": "variables_get_functional",
@@ -54,8 +58,8 @@ export function functionalVarFlyoutBlocks(workspace) {
 	return jsonList
 }
 
-export function functionalVarFlyout(workspace) {
-	let toolbox = []
+export function functionalVarFlyout(workspace: Blockly.WorkspaceSvg) {
+	let toolbox: any[] = []
 	const button = {
 		"kind": "button",
 		"text": "Create variable/function...",
@@ -65,10 +69,10 @@ export function functionalVarFlyout(workspace) {
 
 	workspace.registerButtonCallback(
 		"VAR_FUNCTIONAL",
-		function(button) {
+		function(button: Blockly.FlyoutButton) {
 			Blockly.Variables.createVariableButtonHandler(
 				button.getTargetWorkspace(),
-				null,
+				undefined,
 				"functional"
 			)
 		}

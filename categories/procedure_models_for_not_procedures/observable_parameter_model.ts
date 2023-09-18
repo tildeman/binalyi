@@ -1,20 +1,22 @@
 // First-class curried functions triumph
 
 import * as Blockly from "blockly"
+import { ObservableNotProcedureModel } from "./observable_procedure_model"
 
 export class ObservableNotParameterModel {
-	id = undefined
-	variable = undefined
-	procedureModel = null
+	id: string
+	variable: Blockly.VariableModel
+	procedureModel: ObservableNotProcedureModel
+	workspace: Blockly.Workspace
 
-	constructor(workspace, name, id, varId) {
+	constructor(workspace: Blockly.Workspace, name: string, id: string, varId: string | null | undefined) {
 		this.id = id ?? Blockly.utils.idGenerator.genUid()
 		this.workspace = workspace
 		this.variable = this.workspace.getVariable(name) ??
 			workspace.createVariable(name, "functional", varId) // The only line I'd change
 	}
 
-	setName(name) {
+	setName(name: string) {
 		if (name === this.variable.name) return this
 		const oldName = this.variable.name
 		this.variable = this.workspace.getVariable(name) ??
@@ -23,7 +25,7 @@ export class ObservableNotParameterModel {
 		return this
 	}
 
-	setTypes(_types) {
+	setTypes(_types: any) {
 		throw new Error(
 			"The ParameterModel provided with the component does not support typing. " +
 				"Go away and think something better"
@@ -46,8 +48,8 @@ export class ObservableNotParameterModel {
 		return this.variable
 	}
 
-	setProcedureModel(model) {
-		this.procedureModel_ = model
+	setProcedureModel(model: ObservableNotProcedureModel) {
+		this.procedureModel = model
 		return this
 	}
 }

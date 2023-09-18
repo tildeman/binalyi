@@ -375,8 +375,8 @@ let toolbox = {
 			"custom": "VARIABLE_FUNCTIONAL"
 		}
 	]
-}
+};
 
-let workspace = FBlockly.Blockly.inject("workspace", {toolbox: toolbox})
+let workspace = FBlockly.Blockly.inject("workspace", {toolbox: toolbox});
 
-FBlockly.Init.initialize(workspace)
+FBlockly.Init.initialize(workspace);

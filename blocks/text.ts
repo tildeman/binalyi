@@ -1,4 +1,4 @@
-import * as Blockly from "blockly"
+import * as Blockly from "blockly";
 
 const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	{
@@ -65,33 +65,39 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"tooltip": "",
 		"helpUrl": ""
 	}
-])
+]);
 
-const characterOperations = {
-	validator_: function(name) {
-		const block = this.getSourceBlock()
+// Yes, even this needs to be so unelegant
+type CharacterOperationsBlock = Blockly.BlockSvg & ICharacterOperations;
+interface ICharacterOperations extends CharacterOperationsType {};
+type CharacterOperationsType = typeof CharacterOperations;
+
+const CharacterOperations = {
+	validator_: function(this: Blockly.Input, name: string) {
+		const block = this.getSourceBlock();
 		if (name === "ORD") {
-			block.getInput("VALUE").setCheck("String")
-			block.setOutput(true, "Number")
+			// If input doesn't exist, there's nothing to do
+			block.getInput("VALUE")?.setCheck("String");
+			block.setOutput(true, "Number");
 		}
 		else if (name === "CHR") {
-			block.getInput("VALUE").setCheck("Number")
-			block.setOutput(true, "String")
+			block.getInput("VALUE")?.setCheck("Number");
+			block.setOutput(true, "String");
 		}
-		return name
+		return name;
 	}
-}
+};
 Blockly.Extensions.registerMixin(
 	"character_operations",
-	characterOperations
-)
+	CharacterOperations
+);
 
-function characterOperationsValidatorHelper() {
-	this.getField("ACTION").setValidator(this.validator_)
+function characterOperationsValidatorHelper(this: CharacterOperationsBlock) {
+	this.getField("ACTION")?.setValidator(this.validator_);
 }
 Blockly.Extensions.register(
 	"character_validator_helper",
 	characterOperationsValidatorHelper
-)
+);
 
-Blockly.common.defineBlocks(blocks)
+Blockly.common.defineBlocks(blocks);

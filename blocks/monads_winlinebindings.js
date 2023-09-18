@@ -317,7 +317,7 @@ blocks['monad_action'] = {
 			let input = this.getInput('ADD' + i)
 			if (!input) {
 				input = this.appendValueInput('ADD' + i)
-					.setAlign(Blockly.Input.Align.RIGHT)
+					.setAlign(Blockly.inputs.Align.RIGHT)
 				if (i === 0) {
 					input.appendField("do:")
 				}

@@ -201,7 +201,7 @@ const letMutator = {
 			let input = this.getInput("LET" + i)
 			if (!input) {
 				input = this.appendValueInput("LET" + i)
-					.setAlign(Blockly.Input.Align.RIGHT)
+					.setAlign(Blockly.inputs.Align.RIGHT)
 				if (i === 0) {
 					// Unpopular opinion: use Python syntax for let bindings
 					input.appendField("with")
@@ -221,7 +221,7 @@ const letMutator = {
 		}
 
 		const expr = this.appendValueInput("EXP")
-			  .setAlign(Blockly.Input.Align.RIGHT)
+			  .setAlign(Blockly.inputs.Align.RIGHT)
 		if (targetBlock) {
 			expr.connection.connect(targetBlock.outputConnection)
 		}

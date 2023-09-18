@@ -1,4 +1,4 @@
-import * as Blockly from "blockly"
+import * as Blockly from "blockly";
 
 const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	{
@@ -52,6 +52,6 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"tooltip": "Prints strings without ick.",
 		"helpUrl": ""
 	}
-])
+]);
 
-Blockly.common.defineBlocks(blocks)
+Blockly.common.defineBlocks(blocks);

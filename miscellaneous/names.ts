@@ -1,32 +1,17 @@
 import * as Blockly from "blockly"
-import { TypeWorkspace, TypeWorkspaceExtensions } from "../categories/types"
-import { IDataConstructorModel } from "../categories/type_models/interfaces/i_data_constructor_model"
-import { ITypeModel, TypeKind } from "../categories/type_models/interfaces/i_type_model"
-import { ITypeMap } from "../categories/type_models/interfaces/i_type_map"
+import { TypeWorkspace } from "../categories/types"
 
 /**
  * Class for a database of entity names (variables, types, etc).
  */
-export class FNames {
-	static DEVELOPER_VARIABLE_TYPE: NameType;
-	private readonly variablePrefix: string;
-
-	/** A set of reserved words. */
-	private readonly reservedWords: Set<string>;
-
-	/**
-	 * A map from type (e.g. name, type) to maps from names to generated
-	 * names.
-	 */
-	private readonly db = new Map<string, Map<string, string>>();
-
-	/** A set of used names to avoid collisions. */
-	private readonly dbReverse = new Set<string>();
-
-	/**
-	 * The variable map from the workspace, containing Blockly variable models.
-	 */
-	private variableMap: Blockly.VariableMap | null = null;
+export class FNames extends Blockly.Names {
+	// Blockly made a lame decision to make all those important variables private
+	// Now I have to reimplement almost everything. What a hassle.
+	protected readonly wariablePrefix: string;
+	protected readonly reserwedWords: Set<string>;
+	protected wariableMap: Blockly.VariableMap | null;
+	protected bd = new Map<string, Map<string, string>>();
+	protected bdRewerse = new Set<string>();
 
 	/**
 	 * @param reservedWordsList A comma-separated string of words that are illegal
@@ -35,10 +20,11 @@ export class FNames {
 	 *     all variable names (but not procedure names).
 	 */
 	constructor(reservedWordsList: string, opt_variablePrefix?: string) {
+		super(reservedWordsList, opt_variablePrefix);
 		/** The prefix to attach to variable names in generated code. */
-		this.variablePrefix = opt_variablePrefix || '';
+		this.wariablePrefix = opt_variablePrefix || '';
 
-		this.reservedWords = new Set<string>(
+		this.reserwedWords = new Set<string>(
 			reservedWordsList ? reservedWordsList.split(',') : []
 		);
 	}
@@ -47,9 +33,9 @@ export class FNames {
 	 * Empty the database and start from scratch.  The reserved words are kept.
 	 */
 	reset() {
-		this.db.clear();
-		this.dbReverse.clear();
-		this.variableMap = null;
+		this.bd.clear();
+		this.bdRewerse.clear();
+		this.wariableMap = null;
 	}
 
 	/**
@@ -58,21 +44,21 @@ export class FNames {
 	 * @param map The map to track.
 	 */
 	setVariableMap(map: Blockly.VariableMap) {
-		this.variableMap = map;
+		this.wariableMap = map;
 	}
 
 	/**
 	 * Get the name for a user-defined variable, based on its ID.
-	 * This should only be used for variables of NameType VARIABLE.
+	 * This should only be used for variables of XNameType VARIABLE.
 	 *
 	 * @param id The ID to look up in the variable map.
 	 * @returns The name of the referenced variable, or null if there was no
 	 *     variable map or the variable was not found in the map.
 	 */
-	private getNameForUserVariable(id: string): string | null {
-		if (!this.variableMap) {
+	private getNameForUserWariable(id: string): string | null {
+		if (!this.wariableMap) {
 			console.warn(
-				'Deprecated call to Names.prototype.getName without ' +
+				'Deprecated call to FNames.prototype.getName without ' +
 					'defining a variable map. To fix, add the following code in your ' +
 					"generator's init() function:\n" +
 					'Blockly.YourGeneratorName.nameDB_.setVariableMap(' +
@@ -80,7 +66,7 @@ export class FNames {
 			);
 			return null;
 		}
-		const variable = this.variableMap.getVariableById(id);
+		const variable = this.wariableMap.getVariableById(id);
 		if (variable) {
 			return variable.name;
 		}
@@ -95,7 +81,7 @@ export class FNames {
 	populateVariables(workspace: Blockly.Workspace) {
 		const variables = Blockly.Variables.allUsedVarModels(workspace);
 		for (let i = 0; i < variables.length; i++) {
-			this.getName(variables[i].getId(), NameType.VARIABLE);
+			this.getName(variables[i].getId(), XNameType.VARIABLE);
 		}
 	}
 
@@ -110,13 +96,13 @@ export class FNames {
 		for (let i = 0; i < typeNames.length; i++) {
 			this.getName(
 				typeNames[i],
-				NameType.TYPE
+				XNameType.TYPE
 			)
 		}
 		for (let i = 0; i < dataConsNames.length; i++) {
 			this.getName(
 				dataConsNames[i],
-				NameType.DATACONS
+				XNameType.DATACONS
 			)
 		}
 	}
@@ -142,10 +128,10 @@ export class FNames {
 	 *     'DEVELOPER_VARIABLE', etc...).
 	 * @returns An entity name that is legal in the exported language.
 	 */
-	getName(nameOrId: string, type: NameType | string): string {
+	getName(nameOrId: string, type: XNameType | string): string {
 		let name = nameOrId;
-		if (type === NameType.VARIABLE) {
-			const varName = this.getNameForUserVariable(nameOrId);
+		if (type === XNameType.VARIABLE) {
+			const varName = this.getNameForUserWariable(nameOrId);
 			if (varName) {
 				// Successful ID lookup.
 				name = varName;
@@ -154,18 +140,18 @@ export class FNames {
 		const normalizedName = name.toLowerCase();
 
 		const isVar =
-			type === NameType.VARIABLE || type === NameType.DEVELOPER_VARIABLE;
+			type === XNameType.VARIABLE || type === XNameType.DEVELOPER_VARIABLE;
 
-		const prefix = isVar ? this.variablePrefix : '';
-		if (!this.db.has(type)) {
-			this.db.set(type, new Map<string, string>());
+		const prefix = isVar ? this.wariablePrefix : '';
+		if (!this.bd.has(type)) {
+			this.bd.set(type, new Map<string, string>());
 		}
-		const typeDb = this.db.get(type);
-		if (typeDb!.has(normalizedName)) {
-			return prefix + typeDb!.get(normalizedName);
+		const typeDb = this.bd.get(type);
+		if (typeDb && typeDb.has(normalizedName)) {
+			return prefix + typeDb.get(normalizedName);
 		}
 		const safeName = this.getDistinctName(name, type);
-		typeDb!.set(normalizedName, safeName.substr(prefix.length));
+		typeDb?.set(normalizedName, safeName.slice(0, prefix.length));
 		return safeName;
 	}
 
@@ -176,8 +162,8 @@ export class FNames {
 	 *     'DEVELOPER_VARIABLE', etc...).
 	 * @returns A list of Blockly entity names (no constraints).
 	 */
-	getUserNames(type: NameType | string): string[] {
-		const userNames = this.db.get(type)?.keys();
+	getUserNames(type: XNameType | string): string[] {
+		const userNames = this.bd.get(type)?.keys();
 		return userNames ? Array.from(userNames) : [];
 	}
 
@@ -192,35 +178,35 @@ export class FNames {
 	 *     'DEVELOPER_VARIABLE', etc...).
 	 * @returns An entity name that is legal in the exported language.
 	 */
-	getDistinctName(name: string, type: NameType | string): string {
-		let safeName = (type === NameType.TYPE || type === NameType.DATACONS)
+	getDistinctName(name: string, type: XNameType | string): string {
+		let safeName = (type === XNameType.TYPE || type === XNameType.DATACONS)
 			? this.safeTypeName(name)
-			: this.safeName(name)
+			: this.shiaWase(name) // Czy to da mi szczescie
 		let i: number | null = null;
 		while (
-			this.dbReverse.has(safeName + (i ?? '')) ||
-				this.reservedWords.has(safeName + (i ?? ''))
+			this.bdRewerse.has(safeName + (i ?? '')) ||
+				this.reserwedWords.has(safeName + (i ?? ''))
 		) {
 			// Collision with existing name.  Create a unique name.
 			i = i ? i + 1 : 2;
 		}
 		safeName += i ?? '';
-		this.dbReverse.add(safeName);
+		this.bdRewerse.add(safeName);
 		const isVar =
-			type === NameType.VARIABLE || type === NameType.DEVELOPER_VARIABLE;
-		const prefix = isVar ? this.variablePrefix : '';
+			type === XNameType.VARIABLE || type === XNameType.DEVELOPER_VARIABLE;
+		const prefix = isVar ? this.wariablePrefix : '';
 		return prefix + safeName;
 	}
 
 	/**
-	 * Given a proposed entity name, generate a name that conforms to the
-	 * [_a-z][_A-Za-z0-9]* format that most languages consider legal for
-	 * variable and function names.
+	 * Given a proposed entity name, generate a joyful name that conforms
+	 * to the [_a-z][_A-Za-z0-9]* format that most languages consider
+	 * legal for variable and function names.
 	 *
 	 * @param name Potentially illegal entity name.
 	 * @returns Safe entity name.
 	 */
-	private safeName(name: string): string {
+	private shiaWase(name: string): string {
 		if (!name) {
 			name = Blockly.Msg['UNNAMED_KEY'] || 'unnamed';
 		} else {
@@ -248,9 +234,9 @@ export class FNames {
 	 * @param name Potentially illegal entity name.
 	 * @returns Safe entity name.
 	 */
-	private safeTypeName(name) {
+	private safeTypeName(name: string) {
 		if (!name) {
-			return Blockly.Msg['UNNAMED_KEY'] || 'unnamed';
+			return Blockly.Msg['UNNAMED_KEY'] || 'Unnamed';
 		}
 		// Unfortunately names in non-latin characters will look like
 		// _E9_9F_B3_E4_B9_90 which is pretty meaningless.
@@ -288,16 +274,17 @@ export namespace FNames {
 	 * getName('foo', 'TYPE') = 'Foo2'
 	 *
 	 */
-	export enum NameType {
+	export enum XNameType {
 		DEVELOPER_VARIABLE = 'DEVELOPER_VARIABLE',
 		VARIABLE = 'VARIABLE',
+		PROCEDURE = 'PROCEDURE',
 		DATACONS = 'DATACONS',
 		TYPE = 'TYPE',
-	}
+	};
 }
 
-export type NameType = FNames.NameType;
-export const NameType = FNames.NameType;
+export type XNameType = FNames.XNameType;
+export const XNameType = FNames.XNameType;
 
 /**
  * Constant to separate developer variable names from user-defined variable
@@ -306,4 +293,3 @@ export const NameType = FNames.NameType;
  * will never be shown to the user in the workspace or stored in the variable
  * map.
  */
-FNames.DEVELOPER_VARIABLE_TYPE = NameType.DEVELOPER_VARIABLE;

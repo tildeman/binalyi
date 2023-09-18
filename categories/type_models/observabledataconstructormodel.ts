@@ -9,7 +9,7 @@ export class DataConstructorModel implements IDataConstructorModel {
 	argTypes: ITypeModel[];
 
 	constructor(name: string, parentType: ITypeModel, argTypes: ITypeModel[]) {
-		this.id = utils.idGenerator.genUid()
+		this.id = utils.idGenerator.genUid();
 		this.name = name;
 		this.parentType = parentType;
 		this.argTypes = argTypes;

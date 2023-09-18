@@ -1,4 +1,4 @@
-import * as Blockly from "blockly"
+import * as Blockly from "blockly";
 
 const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	{
@@ -206,15 +206,15 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		],
 		"helpUrl": ""
 	}
-])
+]);
 
 const TOOLTIPS_BY_AXEN = {
 	"FIRST": "Return the first element of a list.",
 	"REST": "Return the list with the first element removed."
-}
+};
 Blockly.Extensions.register(
 	"list_op_tooltip",
 	Blockly.Extensions.buildTooltipForDropdown("ACC", TOOLTIPS_BY_AXEN)
-)
+);
 
-Blockly.common.defineBlocks(blocks)
+Blockly.common.defineBlocks(blocks);

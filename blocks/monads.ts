@@ -1,4 +1,4 @@
-import * as Blockly from "blockly"
+import * as Blockly from "blockly";
 
 const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	{
@@ -170,125 +170,137 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 	}
 ])
 
+type MonadActionMutatorBlock = Blockly.BlockSvg & IMonadActionMutator;
+interface IMonadActionMutator extends MonadActionMutatorType {};
+type MonadActionMutatorType = typeof MonadActionMutator;
+
+type MonadActionMutatorItemBlock = Blockly.BlockSvg & {
+	valueConnection_: Blockly.Connection | null;
+};
+
 // When Google's JavaScript makes your life much harder
 
 const MonadActionMutator = {
 	itemCount_: 3,
 
-	saveExtraState: function() {
+	saveExtraState: function(this: MonadActionMutatorBlock) {
 		return {
 			"itemCount": this.itemCount_
-		}
+		};
 	},
 
-	loadExtraState: function(state) {
-		this.itemCount_ = state["itemCount"]
+	loadExtraState: function(this: MonadActionMutatorBlock, state: any) {
+		this.itemCount_ = state["itemCount"];
 		this.updateShape_()
 	},
 
-	decompose: function(workspace) {
-		const topBlock = workspace.newBlock("monad_action_container")
-		topBlock.initSvg()
+	decompose: function(this: MonadActionMutatorBlock, workspace: Blockly.WorkspaceSvg) {
+		const topBlock = workspace.newBlock("monad_action_container");
+		topBlock.initSvg();
 
-		let connection = topBlock.getInput("STACK").connection
+		let stackInput = topBlock.getInput("STACK");
+		if (!stackInput) return topBlock;
+		let connection = stackInput.connection;
 		for (let i = 0; i < this.itemCount_; ++i) {
-			let itemBlock = workspace.newBlock("monad_action_item")
-			itemBlock.initSvg()
-			connection.connect(itemBlock.previousConnection)
-			connection = itemBlock.nextConnection
+			let itemBlock = workspace.newBlock("monad_action_item");
+			itemBlock.initSvg();
+			if (connection) connection.connect(itemBlock.previousConnection);
+			connection = itemBlock.nextConnection;
 		}
 
-		return topBlock
+		return topBlock;
 	},
 
-	compose: function(topBlock) {
-		let itemBlock = topBlock.getInputTargetBlock("STACK")
+	compose: function(this: MonadActionMutatorBlock, topBlock: Blockly.Block) {
+		let itemBlock = topBlock.getInputTargetBlock("STACK") as MonadActionMutatorItemBlock | null;
 
-		const connections = []
+		const connections: Blockly.Connection[] = [];
 		while (itemBlock && !itemBlock.isInsertionMarker()) {
-			connections.push(itemBlock.valueConnection_)
+			if (itemBlock.valueConnection_) connections.push(itemBlock.valueConnection_);
 			itemBlock = itemBlock.nextConnection &&
-				itemBlock.nextConnection.targetBlock()
+				itemBlock.nextConnection.targetBlock() as MonadActionMutatorItemBlock | null;
 		}
 
 		for (let i = 0; i < this.itemCount_; ++i) {
-			const connection = this.getInput("ADD" + i).connection.targetConnection
+			const addInput = this.getInput("ADD" + i);
+			const hostConnection = addInput ? addInput.connection : null;
+			const connection = hostConnection ? hostConnection.targetConnection : null;
 			if (connection && connections.indexOf(connection) == -1) {
-				connection.disconnect()
+				connection.disconnect();
 			}
 		}
 
-		this.itemCount_ = connections.length
-		this.updateShape_()
+		this.itemCount_ = connections.length;
+		this.updateShape_();
 
 		for (let i = 0; i < this.itemCount_; ++i) {
-			Blockly.Mutator.reconnect(connections[i], this, "ADD" + i)
+			connections[i].reconnect(this, "ADD" + i);
 		}
 	},
 
-	saveConnections: function(containerBlock) {
-		let itemBlock = containerBlock.getInputTargetBlock("STACK")
-		let i = 0
+	saveConnections: function(this: MonadActionMutatorBlock, containerBlock: Blockly.Block) {
+		let itemBlock = containerBlock.getInputTargetBlock("STACK") as MonadActionMutatorItemBlock | null;
+		let i = 0;
 		while (itemBlock) {
 			if (itemBlock.isInsertionMarker()) {
-				itemBlock = itemBlock.getNextBlock()
-				continue
+				itemBlock = itemBlock.getNextBlock() as MonadActionMutatorItemBlock;
+				continue;
 			}
-			const input = this.getInput("ADD" + i)
-			itemBlock.valueConnection_ = input && input.connection.targetConnection
-			itemBlock = itemBlock.getNextBlock()
-			i++
+			const connection = this.getInput("ADD" + i)?.connection?.targetConnection || null;
+			itemBlock.valueConnection_ = connection;
+			itemBlock = itemBlock.getNextBlock() as MonadActionMutatorItemBlock;
+			i++;
 		}
 	},
 
-	updateShape_: function() {
+	updateShape_: function(this: MonadActionMutatorBlock) {
 		if (this.itemCount_ && this.getInput("EMPTY")) {
-			this.removeInput("EMPTY")
+			this.removeInput("EMPTY");
 		}
 		else if (!this.itemCount_ && !this.getInput("EMPTY")) {
-			this.appendDummyInput("EMPTY").appendField("do nothing")
+			this.appendDummyInput("EMPTY").appendField("do nothing");
 		}
 
 		for (let i = 0; i < this.itemCount_; ++i) {
 			if (!this.getInput("ADD" + i)) {
 				const input = this.appendValueInput("ADD" + i)
-					.setAlign(Blockly.Input.Align.RIGHT)
-					.setCheck("Monad")
+					.setAlign(Blockly.inputs.Align.RIGHT)
+					.setCheck("Monad");
 				if (i === 0) {
-					input.appendField("do")
+					input.appendField("do");
 				}
 			}
 		}
 
 		for (let i = this.itemCount_; this.getInput("ADD" + i); ++i) {
-			this.removeInput("ADD" + i)
+			this.removeInput("ADD" + i);
 		}
 	}
-}
+};
 Blockly.Extensions.registerMutator(
 	"do_mutator",
 	MonadActionMutator,
 	undefined,
 	["monad_action_item"]
-)
+);
 
 const TOOLTIPS_BY_OP = {
 	"BIND": "Binds a monadic value to a function and returns a monad of equivalent type constructor. (you know, typical functor jargon)",
 	"THEN": "Takes two monadic values, and returns the second. Used for chaining monads.",
 	"DOLET": "Unwraps the value from a monad, then binds it to a variable in a do-block.",
 	"LET": "A depressed form of the let binding, to be used in a do-block."
-}
+};
 Blockly.Extensions.register(
 	"monad_op_tooltip",
-	Blockly.Extensions.buildTooltipForDropdown ("OP", TOOLTIPS_BY_OP)
-)
+	Blockly.Extensions.buildTooltipForDropdown("OP", TOOLTIPS_BY_OP)
+);
 
-function dbPostInit() {
-	this.updateShape_()
+function dbPostInit(this: MonadActionMutatorBlock) {
+	this.updateShape_();
 }
 Blockly.Extensions.register(
 	"do_block_post_initialization",
 	dbPostInit
-)
+);
 
 Blockly.common.defineBlocks(blocks)

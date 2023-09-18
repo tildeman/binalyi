@@ -558,7 +558,7 @@ const variableCallMutator = {
 		for (let i = 0; i < this.itemCount_; ++i) {
 			if (!this.getInput("ARG" + i)) {
 				const input = this.appendValueInput("ARG" + i)
-					  .setAlign(Blockly.Input.Align.RIGHT)
+					  .setAlign(Blockly.inputs.Align.RIGHT)
 				if (i === 0) {
 					input.appendField(
 						new Blockly.FieldVariable(
