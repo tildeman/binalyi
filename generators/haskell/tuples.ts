@@ -25,10 +25,10 @@ export function tuples_create_with(block: Block, generator: HaskellGenerator) {
 }
 
 export function tuples_pair(block: Block, generator: HaskellGenerator) {
-	const list =
-		generator.valueToCode(block, "NAME", generator.ORDER_FUNCTION_PARAM) || "[]";
+	const tuple =
+		generator.valueToCode(block, "NAME", generator.ORDER_FUNCTION_PARAM) || "()";
 	const action = block.getFieldValue("ACC");
 	const func = action === "FIRST" ? "fst " : "snd ";
-	const code = func + list;
+	const code = func + tuple;
 	return [code, generator.ORDER_FUNCTION_CALL];
 }

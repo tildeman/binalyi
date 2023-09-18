@@ -1,6 +1,7 @@
 import * as Blockly from "blockly";
+import { FBlockDefinition } from "../miscellaneous/blockdefs";
 
-const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
+const BLOCK_DEFINITIONS: FBlockDefinition[] = [
 	{
 		"type": "monad_return",
 		"message0": "return %1",
@@ -168,10 +169,11 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"tooltip": "Add an action to the block.",
 		"helpUrl": ""
 	}
-])
+];
+const blocks = Blockly.common.createBlockDefinitionsFromJsonArray(BLOCK_DEFINITIONS);
 
 type MonadActionMutatorBlock = Blockly.BlockSvg & IMonadActionMutator;
-interface IMonadActionMutator extends MonadActionMutatorType {};
+interface IMonadActionMutator extends MonadActionMutatorType {}
 type MonadActionMutatorType = typeof MonadActionMutator;
 
 type MonadActionMutatorItemBlock = Blockly.BlockSvg & {

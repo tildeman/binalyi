@@ -1,7 +1,8 @@
 import * as Blockly from "blockly";
 import { InputWithCreatedVariables } from "../miscellaneous/mutated_blocks";
+import { FBlockDefinition } from "../miscellaneous/blockdefs";
 
-const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
+const BLOCK_DEFINITIONS: FBlockDefinition[] = [
 	{
 		"type": "function_lambda",
 		"message0": "\u03bb %1 \u2192 %2",
@@ -106,10 +107,11 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"tooltip": "Turn an operator into an ordinary function.",
 		"helpUrl": ""
 	}
-])
+];
+const blocks = Blockly.common.createBlockDefinitionsFromJsonArray(BLOCK_DEFINITIONS)
 
 type LetMutatorBlock = Blockly.BlockSvg & ILetMutator;
-interface ILetMutator extends LetMutatorType {};
+interface ILetMutator extends LetMutatorType {}
 type LetMutatorType = typeof LetMutator;
 
 type LetMutatorItemBlock = Blockly.BlockSvg & {

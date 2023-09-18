@@ -1,6 +1,7 @@
 import * as Blockly from "blockly";
+import { FBlockDefinition } from "../miscellaneous/blockdefs";
 
-const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
+const BLOCK_DEFINITIONS: FBlockDefinition[] = [
 	{
 		"type": "logic_patternmatch",
 		"message0": "match %1 case %2 run %3",
@@ -80,7 +81,8 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"tooltip": "An if-else with multiple conditions",
 		"helpUrl": ""
 	}
-]);
+];
+const blocks = Blockly.common.createBlockDefinitionsFromJsonArray(BLOCK_DEFINITIONS);
 
 type CondBlock = Blockly.Block & ICondMutator;
 interface ICondMutator extends CondMutatorType {}

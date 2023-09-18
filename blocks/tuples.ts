@@ -1,6 +1,7 @@
 import * as Blockly from "blockly";
+import { FBlockDefinition } from "../miscellaneous/blockdefs";
 
-const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
+const BLOCK_DEFINITIONS: FBlockDefinition[] = [
 	{
 		"type": "tuples_create_empty",
 		"message0": "create empty tuple",
@@ -77,10 +78,11 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		],
 		"tooltip": "Create a tuple with any number of items."
 	}
-])
+];
+const blocks = Blockly.common.createBlockDefinitionsFromJsonArray(BLOCK_DEFINITIONS);
 
 type TupleMutatorBlock = Blockly.BlockSvg & ITupleMutator;
-interface ITupleMutator extends TupleMutatorType {};
+interface ITupleMutator extends TupleMutatorType {}
 type TupleMutatorType = typeof TupleMutator;
 
 type TupleMutatorItemBlock = Blockly.BlockSvg & {

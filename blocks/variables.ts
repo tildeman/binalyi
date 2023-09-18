@@ -1,7 +1,8 @@
 import * as Blockly from "blockly";
 import { VariableModelWithParamCount } from "../categories/variables_functional";
+import { FBlockDefinition } from "../miscellaneous/blockdefs";
 
-const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
+const BLOCK_DEFINITIONS: FBlockDefinition[] = [
 	{
 		"type": "variables_get_functional_container",
 		"message0": "inputs %1 %2",
@@ -71,10 +72,11 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 			"load_param_count"
 		]
 	}
-])
+];
+const blocks = Blockly.common.createBlockDefinitionsFromJsonArray(BLOCK_DEFINITIONS)
 
 type VariableDefMutatorBlock = Blockly.BlockSvg & IVariableDefMutator;
-interface IVariableDefMutator extends VariableDefMutatorType {};
+interface IVariableDefMutator extends VariableDefMutatorType {}
 type VariableDefMutatorType = typeof VariableDefMutator;
 
 type VariableDefMutatorItemBlock = Blockly.BlockSvg & {

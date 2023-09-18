@@ -1,6 +1,7 @@
 import * as Blockly from "blockly";
+import { FBlockDefinition } from "../miscellaneous/blockdefs";
 
-const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
+const BLOCK_DEFINITIONS: FBlockDefinition[] = [
 	{
 		"type": "monad_print",
 		"message0": "show %1",
@@ -52,6 +53,7 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"tooltip": "Prints strings without ick.",
 		"helpUrl": ""
 	}
-]);
+];
+const blocks = Blockly.common.createBlockDefinitionsFromJsonArray(BLOCK_DEFINITIONS);
 
 Blockly.common.defineBlocks(blocks);

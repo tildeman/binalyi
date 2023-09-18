@@ -1,8 +1,12 @@
 import * as Blockly from "blockly";
-import { removeType, identifyModelParams, findLegalName, rename, TypeWorkspace } from "../categories/types.js";
-import { ContextMenuOption, LegacyContextMenuOption, Scope } from "blockly/core/contextmenu_registry.js";
+import { removeType, identifyModelParams, findLegalName, rename, TypeWorkspace } from "../categories/types";
+import { ContextMenuOption, LegacyContextMenuOption, Scope } from "blockly/core/contextmenu_registry";
+import { FBlockDefinition } from "../miscellaneous/blockdefs";
 
-const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
+/**
+ * Define suitable blocks
+ */
+const BLOCK_DEFINITIONS: FBlockDefinition[] = [
 	{
 		"type": "types_cast",
 		"message0": "cast %1 to %2",
@@ -194,7 +198,8 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"tooltip": "",
 		"helpUrl": ""
 	},
-]);
+];
+const blocks = Blockly.common.createBlockDefinitionsFromJsonArray(BLOCK_DEFINITIONS);
 
 const TOOLTIPS_BY_TYPE = {
 	"Integer": "An integer without constraints.",

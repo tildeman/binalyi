@@ -1,6 +1,7 @@
 import * as Blockly from "blockly";
+import { FBlockDefinition } from "../miscellaneous/blockdefs";
 
-const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
+const BLOCK_DEFINITIONS: FBlockDefinition[] = [
 	{
 		"type": "text_parse",
 		"message0": "parse %1",
@@ -65,11 +66,12 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"tooltip": "",
 		"helpUrl": ""
 	}
-]);
+];
+const blocks = Blockly.common.createBlockDefinitionsFromJsonArray(BLOCK_DEFINITIONS);
 
 // Yes, even this needs to be so unelegant
 type CharacterOperationsBlock = Blockly.BlockSvg & ICharacterOperations;
-interface ICharacterOperations extends CharacterOperationsType {};
+interface ICharacterOperations extends CharacterOperationsType {}
 type CharacterOperationsType = typeof CharacterOperations;
 
 const CharacterOperations = {

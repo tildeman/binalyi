@@ -1,6 +1,7 @@
 import * as Blockly from "blockly";
+import { FBlockDefinition } from "../miscellaneous/blockdefs";
 
-const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
+const BLOCK_DEFINITIONS: FBlockDefinition[] = [
 	{
 		"type": "lists_map",
 		"message0": "use function %1 on list %2",
@@ -206,7 +207,8 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		],
 		"helpUrl": ""
 	}
-]);
+];
+const blocks = Blockly.common.createBlockDefinitionsFromJsonArray(BLOCK_DEFINITIONS);
 
 const TOOLTIPS_BY_AXEN = {
 	"FIRST": "Return the first element of a list.",
