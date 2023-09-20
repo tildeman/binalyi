@@ -11,7 +11,7 @@ export class ObservableNotProcedureModel {
 	shouldTriggerUpdates = true
 	workspace: Blockly.Workspace
 
-	constructor(workspace: Blockly.Workspace, name: string, id: string) {
+	constructor(workspace: Blockly.Workspace, name: string, id?: string) {
 		this.id = id ?? Blockly.utils.idGenerator.genUid()
 		this.name = name
 		this.workspace = workspace

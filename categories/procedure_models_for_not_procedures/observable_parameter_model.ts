@@ -9,7 +9,7 @@ export class ObservableNotParameterModel {
 	procedureModel: ObservableNotProcedureModel
 	workspace: Blockly.Workspace
 
-	constructor(workspace: Blockly.Workspace, name: string, id: string, varId: string | null | undefined) {
+	constructor(workspace: Blockly.Workspace, name: string, id: string, varId?: string | null) {
 		this.id = id ?? Blockly.utils.idGenerator.genUid()
 		this.workspace = workspace
 		this.variable = this.workspace.getVariable(name) ??

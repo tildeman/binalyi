@@ -128,7 +128,7 @@ export class FNames extends Blockly.Names {
 	 *     'DEVELOPER_VARIABLE', etc...).
 	 * @returns An entity name that is legal in the exported language.
 	 */
-	getName(nameOrId: string, type: XNameType | string): string {
+	getName(nameOrId: string, type: XNameType): string {
 		let name = nameOrId;
 		if (type === XNameType.VARIABLE) {
 			const varName = this.getNameForUserWariable(nameOrId);
@@ -151,7 +151,7 @@ export class FNames extends Blockly.Names {
 			return prefix + typeDb.get(normalizedName);
 		}
 		const safeName = this.getDistinctName(name, type);
-		typeDb?.set(normalizedName, safeName.slice(0, prefix.length));
+		typeDb?.set(normalizedName, safeName.slice(prefix.length));
 		return safeName;
 	}
 
@@ -260,6 +260,13 @@ export class FNames extends Blockly.Names {
 	static equals(name1: string, name2: string): boolean {
 		// name1.localeCompare(name2) is slower.
 		return name1.toLowerCase() === name2.toLowerCase();
+	}
+
+	/**
+	 * Dummy function. Please remove
+	 */
+	getbd() {
+		return this.bd;
 	}
 }
 

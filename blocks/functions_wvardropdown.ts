@@ -1,9 +1,13 @@
-// This is an absolute flop (please don't use this)
+/**
+ * @fileoverview Contains function definitions with a modified "let" input using a dropdown for variables.
+ * This implementation is buggy and incomplete. Expect errors and glitches.
+ * (Old note: This is an absolute flop (please don't use this))
+ */
 
 import * as Blockly from "blockly"
-import { Block } from "blockly"
+import { FBlockDefinition } from "../miscellaneous/blockdefs";
 
-const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
+const BLOCK_DEFINITIONS: FBlockDefinition[] = [
 	{
 		"type": "function_lambda",
 		"message0": "\u03bb %1 \u2192 %2",
@@ -116,109 +120,119 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"tooltip": "",
 		"helpUrl": ""
 	}
-])
+];
+const blocks = Blockly.common.createBlockDefinitionsFromJsonArray(BLOCK_DEFINITIONS);
 
-const letMutator = {
-	paramIds_: [],
+type LetMutatorBlock = Blockly.BlockSvg & ILetMutator;
+interface ILetMutator extends LetMutatorType {}
+type LetMutatorType = typeof LetMutator;
 
-	saveExtraState: function() {
+type LetMutatorItemBlock = Blockly.BlockSvg & {
+	valueConnection_: Blockly.Connection | null;
+};
+
+const LetMutator = {
+	paramIds_: [] as (string | null)[],
+
+	saveExtraState: function(this: LetMutatorBlock) {
 		return {
 			"params": this.paramIds_
-		}
+		};
 	},
 
-	loadExtraState: function(state) {
-		this.paramIds_ = state["params"]
-		this.updateShape_()
+	loadExtraState: function(this: LetMutatorBlock, state: any) {
+		this.paramIds_ = state["params"];
+		this.updateShape_();
 	},
 
-	decompose: function(workspace) {
-		const containerBlock = workspace.newBlock("function_let_container")
-		containerBlock.initSvg()
-		let connection = containerBlock.getInput("STACK").connection
+	decompose: function(this: LetMutatorBlock, workspace: Blockly.WorkspaceSvg) {
+		const containerBlock = workspace.newBlock("function_let_container");
+		containerBlock.initSvg();
+		let connection = containerBlock.getInput("STACK")?.connection || null;
 		for (let i = 0; i < this.paramIds_.length; ++i) {
-			const itemBlock = workspace.newBlock("function_let_mutatorarg")
-			itemBlock.initSvg()
-			connection.connect(itemBlock.previousConnection)
-			connection = itemBlock.nextConnection
+			const itemBlock = workspace.newBlock("function_let_mutatorarg");
+			itemBlock.initSvg();
+			connection?.connect(itemBlock.previousConnection);
+			connection = itemBlock.nextConnection;
 		}
-		return containerBlock
+		return containerBlock;
 	},
 
-	compose: function(containerBlock) {
-		let itemBlock = containerBlock.getInputTargetBlock("STACK")
+	compose: function(this: LetMutatorBlock, containerBlock: Blockly.Block) {
+		let itemBlock = containerBlock.getInputTargetBlock("STACK");
 
-		let connections = []
-		let toPush = []
+		let connections: (Blockly.Connection | null)[] = [];
+		let toPush: (string | null)[] = [];
 		while (itemBlock) {
 			if (itemBlock.isInsertionMarker()) {
-				itemBlock = itemBlock.getNextBlock()
-				continue
+				itemBlock = itemBlock.getNextBlock();
+				continue;
 			}
-			connections.push(itemBlock.valueConnection_)
-			toPush.push(null)
-			itemBlock = itemBlock.getNextBlock()
+			connections.push((itemBlock as LetMutatorItemBlock).valueConnection_);
+			toPush.push(null);
+			itemBlock = itemBlock.getNextBlock();
 		}
 
 		for (let i = 0; i < this.paramIds_.length; ++i) {
-			const connection = this.getInput("LET" + (i + 1)).connection.targetConnection
-			if (connection && connections.indexOf(connections) === -1) {
-				connection.disconnect()
+			const connection = this.getInput("LET" + (i + 1))?.connection?.targetConnection;
+			if (connection && connections.indexOf(connection) === -1) {
+				connection.disconnect();
 			}
-			toPush[i] = this.getFieldValue("NAME" + (i + 1))
+			toPush[i] = this.getFieldValue("NAME" + (i + 1));
 		}
-		this.paramIds_ = toPush
-		this.updateShape_()
+		this.paramIds_ = toPush;
+		this.updateShape_();
 
 		for (let i = 0; i < this.paramIds_.length; ++i) {
-			Blockly.Mutator.reconnect(connections[i], this, "LET" + (i + 1))
+			connections[i]?.reconnect(this, "LET" + (i + 1));
 		}
 	},
 
-	saveConnections: function(containerBlock) {
-		let itemBlock = containerBlock.getInputTargetBlock("STACK")
-		let i = 1
+	saveConnections: function(this: LetMutatorBlock, containerBlock: Blockly.Block) {
+		let itemBlock = containerBlock.getInputTargetBlock("STACK");
+		let i = 1;
 		while (itemBlock) {
 			if (itemBlock.isInsertionMarker()){
-				itemBlock = itemBlock.getNextBlock()
-				continue
+				itemBlock = itemBlock.getNextBlock();
+				continue;
 			}
-			const input = this.getInput("LET" + i)
-			itemBlock.valueConnection_ = input && input.connection.targetConnection
-			itemBlock = itemBlock.getNextBlock()
-			i++
+			const input = this.getInput("LET" + i);
+			(itemBlock as LetMutatorItemBlock).valueConnection_ =
+				input && input.connection?.targetConnection || null;
+			itemBlock = itemBlock.getNextBlock();
+			i++;
 		}
 	},
 
-	updateShape_: function() {
+	updateShape_: function(this: LetMutatorBlock) {
 		for (let i = 0; i < this.paramIds_.length; ++i) {
-			let input = this.getInput("LET" + (i + 1))
-			const vwid = this.workspace.getVariableById(this.paramIds_[i])
+			let input = this.getInput("LET" + (i + 1));
+			const vwid = this.workspace.getVariableById(this.paramIds_[i] || "");
 			if (!input) {
 				input = this.appendValueInput("LET" + (i + 1))
 							.appendField(
 								new Blockly.FieldVariable(
 									null,
-									null,
+									undefined,
 									["functional"],
 									"functional"
 								),
 								"NAME" + (i + 1)
 							)
-							.appendField("=")
+							.appendField("=");
 			}
 		}
 
 		for (let i = this.paramIds_.length; this.getInput("LET" + (i + 1)); ++i) {
-			this.removeInput("LET" + (i + 1))
+			this.removeInput("LET" + (i + 1));
 		}
 	}
 }
 Blockly.Extensions.registerMutator(
 	"let_mutator",
-	letMutator,
+	LetMutator,
 	undefined,
 	["function_let_mutatorarg"]
-)
+);
 
-Blockly.common.defineBlocks(blocks)
+Blockly.common.defineBlocks(blocks);

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Contains monad block definitions with an extensible do-block with separate let bindings.
+ */
+
 import * as Blockly from "blockly";
 import { FBlockDefinition } from "../miscellaneous/blockdefs";
 

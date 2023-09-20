@@ -37,11 +37,12 @@ export class HaskellGenerator extends Blockly.CodeGenerator {
 
 	isInitialized: boolean;
 	definitions_: { [key: string]: string; };
-	nameDB_?: FNames | undefined;
+	nameDB_: FNames;
 	typedefs: { [key: string]: string[] };
 
 	constructor(name: string = "Haskell") {
 		super(name);
+		this.nameDB_ = new FNames("");
 		this.isInitialized = false;
 	}
 

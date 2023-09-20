@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Contains variable blocks with a normal value input accepting variables and data constructors.
+ */
+
 import * as Blockly from "blockly";
 import { VariableModelWithParamCount } from "../categories/variables_functional";
 import { FBlockDefinition } from "../miscellaneous/blockdefs";

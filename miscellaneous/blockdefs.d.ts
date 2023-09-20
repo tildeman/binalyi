@@ -143,18 +143,63 @@ type BlockInput = IValueInput | IStatementInput | IDummyInput;
 // Avoid name collisions with Blockly's BlockDefinition: any
 // Only took an hour to do all the type gymnastics
 export interface FBlockDefinition {
+	/**
+	 * The type indicating the block's function
+	 */
 	type: string;
+	/**
+	 * The default syntax of the block.
+	 */
 	message0?: string;
+	/**
+	 * The default inputs and fields that the block has.
+	 */
 	args0?: (BlockField | BlockInput)[];
+	/**
+	 * Whether to have inline or external inputs.
+	 */
 	inputsInline?: boolean;
+	/**
+	 * Determines if the block has a value output and assigns a type to it.
+	 * A value of `null` indicates that the block is compatible with any type.
+	 */
 	output?: string | null;
+	/**
+	 * Determines if the block has a top connector and assigns a type to it.
+	 * A value of `null` indicates that any block can connect on top of it.
+	 */
 	previousStatement?: string | null;
+	/**
+	 * Determines if the block has a bottom connector and assigns a type to it.
+	 * A value of `null` indicates that any block can connect under it.
+	 */
 	nextStatement?: string | null;
+	/**
+	 * The hue value of the block.
+	 */
 	colour?: number;
+	/**
+	 * The "style" category the block belongs to.
+	 */
 	style?: string;
+	/**
+	 * What should be displayed on mouse hover.
+	 */
 	tooltip?: string;
+	/**
+	 * Extra reading for the user of the block.
+	 */
 	helpUrl?: string;
+	/**
+	 * Whether to enable a menu when right-clicking a block.
+	 */
 	enableContextMenu?: boolean;
+	/**
+	 * The mutator UI a block can have.
+	 */
 	mutator?: string;
+	/**
+	 * Extensions and mix-ins of a block.
+	 */
 	extensions?: string[];
 }

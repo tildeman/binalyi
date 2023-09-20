@@ -1,5 +1,6 @@
 import * as Blockly from "blockly"
 import { BlockAny } from "../miscellaneous/mutated_blocks";
+import { BubbleOpen } from "blockly/core/events/events_bubble_open";
 
 // Curried function, don't ask why
 export function mutatorOpenListener(blockType: string) {
@@ -41,7 +42,7 @@ export function mutatorOpenListener(blockType: string) {
 		updateMutatorFlyout(workspace as Blockly.WorkspaceSvg);
 	}
 
-	return function(e) {
+	return function(e: BubbleOpen) {
 		if (e.type !== Blockly.Events.BUBBLE_OPEN) {
 			return;
 		}

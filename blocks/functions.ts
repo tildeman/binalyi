@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Contains function definitions with a normal "let" input offering extensible binding options.
+ */
+
 import * as Blockly from "blockly";
 import { InputWithCreatedVariables } from "../miscellaneous/mutated_blocks";
 import { FBlockDefinition } from "../miscellaneous/blockdefs";

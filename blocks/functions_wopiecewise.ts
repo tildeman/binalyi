@@ -1,9 +1,14 @@
-import * as Blockly from "blockly"
-import { Block } from "blockly"
+/**
+ * @fileoverview Contains function definitions with a modified "let" input using a text field for variables.
+ * This implementation is buggy and incomplete. Expect errors and glitches.
+ */
 
-// That stupid bug still lingers...
+import * as Blockly from "blockly";
+import { FBlockDefinition } from "../miscellaneous/blockdefs";
+import { InputWithCreatedVariables } from "../miscellaneous/mutated_blocks";
+import { findLegalName } from "../categories/types";
 
-const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
+const BLOCK_DEFINITIONS: FBlockDefinition[] = [
 	{
 		"type": "function_lambda",
 		"message0": "\u03bb %1 \u2192 %2",
@@ -80,7 +85,8 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"args0": [
 			{
 				"type": "field_input",
-				"name": "NAME"
+				"name": "NAME",
+				"text": ""
 			}
 		],
 		"previousStatement": null,
@@ -110,31 +116,40 @@ const blocks = Blockly.common.createBlockDefinitionsFromJsonArray([
 		"tooltip": "",
 		"helpUrl": ""
 	}
-])
+];
+const blocks = Blockly.common.createBlockDefinitionsFromJsonArray(BLOCK_DEFINITIONS);
 
-const letMutator = {
-	params_: [],
+type LetMutatorBlock = Blockly.BlockSvg & ILetMutator;
+interface ILetMutator extends LetMutatorType {}
+type LetMutatorType = typeof LetMutator & typeof validateLetBindingMixin;
 
-	saveExtraState: function() {
+type LetMutatorItemBlock = Blockly.BlockSvg & {
+	valueConnection_: Blockly.Connection | null;
+};
+
+const LetMutator = {
+	params_: [] as { id: string, name: any }[],
+
+	saveExtraState: function(this: LetMutatorBlock) {
 		return {
 			"params": this.params_
-		}
+		};
 	},
 
-	loadExtraState: function(state) {
-		this.params_ = state["params"]
-		this.updateShape_()
+	loadExtraState: function(this: LetMutatorBlock, state: any) {
+		this.params_ = state["params"];
+		this.updateShape_();
 	},
 
-	decompose: function(workspace) {
+	decompose: function(this: LetMutatorBlock, workspace: Blockly.WorkspaceSvg) {
 		const containerBlockDef = {
 			"type": "function_let_container",
 			"inputs": {
 				"STACK": {}
 			}
-		}
+		};
 
-		let connDef = containerBlockDef["inputs"]["STACK"]
+		let connDef = containerBlockDef["inputs"]["STACK"];
 		for (const param of this.params_) {
 			connDef["block"] = {
 				"type": "function_let_mutatorarg",
@@ -143,39 +158,37 @@ const letMutator = {
 					"NAME": param["name"]
 				},
 				"next": {}
-			}
-			connDef = connDef["block"]["next"]
+			};
+			connDef = connDef["block"]["next"];
 		}
 
 		const containerBlock = Blockly.serialization.blocks.append(
 			containerBlockDef,
 			workspace,
 			{recordUndo: false}
-		)
+		);
 
-		return containerBlock
+		return containerBlock;
 	},
 
-	compose: function(containerBlock) {
-		const count = this.params_.length
-
-		let newModel = []
+	compose: function(this: LetMutatorBlock, containerBlock: Blockly.Block) {
+		let newModel: { id: string, name: any }[] = [];
 		let i = 0;
-		let paramBlock = containerBlock.getInputTargetBlock("STACK")
+		let paramBlock = containerBlock.getInputTargetBlock("STACK");
 		while (paramBlock && !paramBlock.isInsertionMarker()) {
 			newModel.push({
 				"id": paramBlock.id,
 				"name": paramBlock.getFieldValue("NAME")
-			})
+			});
 			paramBlock = paramBlock.nextConnection
-				&& paramBlock.nextConnection.targetBlock()
-			++i
+				&& paramBlock.nextConnection.targetBlock();
+			++i;
 		}
-		this.params_ = newModel
-		this.updateShape_()
+		this.params_ = newModel;
+		this.updateShape_();
 	},
 
-	saveConnections: function(containerBlock) {
+	saveConnections: function(this: LetMutatorBlock, containerBlock: Blockly.Block) {
 		let itemBlock = containerBlock.getInputTargetBlock("STACK")
 		let i = 0
 		while (itemBlock) {
@@ -183,153 +196,145 @@ const letMutator = {
 				itemBlock = itemBlock.getNextBlock()
 				continue
 			}
-			const input = this.getInput("LET" + i)
-			itemBlock.valueConnection_ = input && input.connection.targetConnection
-			itemBlock = itemBlock.getNextBlock()
-			i++
+			const input = this.getInput("LET" + i);
+			(itemBlock as LetMutatorItemBlock).valueConnection_ =
+				input && input?.connection?.targetConnection || null;
+			itemBlock = itemBlock.getNextBlock();
+			i++;
 		}
 	},
 
-	updateShape_: function() {
-		let targetBlock = null
+	updateShape_: function(this: LetMutatorBlock) {
+		let targetBlock: Blockly.Block | null = null;
 		if (this.getInput("EXP")) {
-			targetBlock = this.getInput("EXP").connection.targetBlock()
-			this.removeInput("EXP")
+			targetBlock = this.getInput("EXP")?.connection?.targetBlock() || null;
+			this.removeInput("EXP");
 		}
 
 		for (let i = 0; i < this.params_.length; ++i) {
-			let input = this.getInput("LET" + i)
+			let input = this.getInput("LET" + i);
 			if (!input) {
 				input = this.appendValueInput("LET" + i)
-					.setAlign(Blockly.inputs.Align.RIGHT)
+					.setAlign(Blockly.inputs.Align.RIGHT);
 				if (i === 0) {
 					// Unpopular opinion: use Python syntax for let bindings
-					input.appendField("with")
+					input.appendField("with");
 				}
 				input.appendField(
 						this.params_[i]["name"],
 						"NAME" + i
 					)
-					.appendField("as")
+					.appendField("as");
 			}
 
-			this.setFieldValue(this.params_[i]["name"], "NAME" + i)
+			this.setFieldValue(this.params_[i]["name"], "NAME" + i);
 		}
 
 		for (let i = this.params_.length; this.getInput("LET" + i); ++i) {
-			this.removeInput("LET" + i)
+			this.removeInput("LET" + i);
 		}
 
 		const expr = this.appendValueInput("EXP")
-			  .setAlign(Blockly.inputs.Align.RIGHT)
-		if (targetBlock) {
-			expr.connection.connect(targetBlock.outputConnection)
+			  .setAlign(Blockly.inputs.Align.RIGHT);
+		if (targetBlock && targetBlock.outputConnection) {
+			expr.connection?.connect(targetBlock.outputConnection);
 		}
 		if (!this.params_.length) {
-			expr.appendField("with nothing")
+			expr.appendField("with nothing");
 		}
-		expr.appendField("run")
+		expr.appendField("run");
 	}
-}
+};
 Blockly.Extensions.registerMutator(
 	"let_mutator",
-	letMutator,
+	LetMutator,
 	undefined,
 	["function_let_mutatorarg"]
-)
+);
 
 const validateLetBindingMixin = {
-	validator_: function(varName) {
-		const sourceBlock = this.getSourceBlock()
-		const outerWs = Blockly.Mutator.findParentWs(sourceBlock.workspace)
-		varName = varName.replace(/[\s\xa0]+/g, " ").replace(/^ | $/g, "")
+	validator_: function(this: InputWithCreatedVariables, varName: string) {
+		const sourceBlock = this.getSourceBlock();
+		const outerWs = sourceBlock.workspace.getRootWorkspace();
+		varName = varName.replace(/[\s\xa0]+/g, " ").replace(/^ | $/g, "");
 		if (!varName) {
-			return null
+			return null;
 		}
 
-		const workspace = sourceBlock.workspace.targetWorkspace
-			  || sourceBlock.workspace
-		const blocks = workspace.getAllBlocks(false)
-		const caselessName = varName.toLowerCase() // Thank god
+		const workspace = (sourceBlock.workspace as Blockly.WorkspaceSvg).targetWorkspace
+			  || (sourceBlock.workspace as Blockly.WorkspaceSvg);
+		const blocks = workspace.getAllBlocks(false);
+		const caselessName = varName.toLowerCase(); // Thank god
 		for (let i = 0; i < blocks.length; ++i) {
 			if (blocks[i].id === this.getSourceBlock().id) {
-				continue
+				continue;
 			}
 
-			const otherVar = blocks[i].getFieldValue("NAME")
+			const otherVar = blocks[i].getFieldValue("NAME");
 			if (otherVar && otherVar.toLowerCase() === caselessName) {
-				return null
+				return null;
 			}
 		}
 
 		if (sourceBlock.isInFlyout) {
-			return varName
+			return varName;
 		}
 
 		// Let bindings only deals with "Functional" vartype
-		let model = outerWs.getVariable(varName, "functional")
+		let model = outerWs?.getVariable(varName, "functional");
 		if (model && model.name !== varName) {
 			// Following Haskell's convention of lowercase names and titlecase classes
-			outerWs.renameVariableById(model.getId(), varName)
+			outerWs?.renameVariableById(model.getId(), varName);
 		}
 		if (!model) {
-			model = outerWs.createVariable(varName, "functional")
+			model = outerWs?.createVariable(varName, "functional");
 			if (model && this.createdVariables_) {
-				this.createdVariables_.push(model)
+				this.createdVariables_.push(model);
 			}
 		}
 
-		return varName
+		return varName;
 	},
 
 	// If the answer is wrong, modify the answer key in your favor
-	// - China, in response to cartography and WGS-84
-	deleteImmediateVars_: function(newText) {
-		const outerWs = Blockly.Mutator.findParentWs(this.getSourceBlock().workspace)
+	deleteImmediateVars_: function(this: InputWithCreatedVariables, newText: string) {
+		const outerWs = this.getSourceBlock().workspace.getRootWorkspace();
 		if (!outerWs) {
-			return
+			return;
 		}
 		for (let i = 0; i < this.createdVariables_.length; ++i) {
-			const model = this.createdVariables_[i]
+			const model = this.createdVariables_[i];
 			if (model.name !== newText) {
-				outerWs.deleteVariableById(model.getId())
+				outerWs.deleteVariableById(model.getId());
 			}
 		}
 	}
-}
+};
 Blockly.Extensions.registerMixin(
 	"function_let_mutatorarg_validate_mixin",
 	validateLetBindingMixin
-)
+);
 
-const addValidatorToLetBindingHelper = function() {
-	const nameField = this.getField("NAME")
+function addValidatorToLetBindingHelper (this: LetMutatorBlock) {
+	const nameField = this.getField("NAME");
+	if (!nameField) return;
 
-	nameField.setValidator(this.validator_)
-
-	nameField.oldShowEditorFn_ = nameField.showEditor_
-
-	const newShowEditorFn = function() {
-		this.createdVariables_ = []
-		this.oldShowEditorFn_()
-	}
-	nameField.showEditor_ = newShowEditorFn
-	nameField.onFinishEditing_ = this.deleteImmediateVars_
-	nameField.createdVariables_ = []
-	nameField.onFinishEditing_("x")
+	// FIXME: Find a legal name for variables in a let binding.
+	nameField.setValue(findLegalName("", this).toLowerCase());
+	nameField.setValidator(this.validator_);
 }
 Blockly.Extensions.register(
 	"function_let_mutatorarg_add_validator_helper",
 	addValidatorToLetBindingHelper
-)
+);
 
 // It's an informal name, but please forget about it
 function updateShapeLikeATrueList() {
-	this.updateShape_()
+	this.updateShape_();
 }
 Blockly.Extensions.register(
 	"function_let_post_initialization",
 	updateShapeLikeATrueList
-)
+);
 
-Blockly.common.defineBlocks(blocks)
+Blockly.common.defineBlocks(blocks);
