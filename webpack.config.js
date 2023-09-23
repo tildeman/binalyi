@@ -1,31 +1,43 @@
-const path = require("path");
+const path = require('path');
+const DeclarationBundlerPlugin = require('types-webpack-bundler');
+
 module.exports = {
-	entry : "./index.ts",
+	entry : './index.ts',
 	module: {
 		rules: [
 			{
-				test: /\.[jt]sx?$/,
-				loader: "esbuild-loader",
-				options: {
-					target: "es2018"
-				}
+				test: /\.ts$/,
+				use: 'ts-loader'
 			},
+			{
+				test: /\.js$/,
+				loader: 'babel-loader',
+				options: {
+					targets: '>0.3% and not dead'
+				}
+			}
 		],
 	},
 	resolve: {
 		// Add `.ts` and `.tsx` as a resolvable extension.
-		extensions: [".ts", ".tsx", ".js", ".jsx"],
+		extensions: ['.ts', '.tsx', '.js', '.jsx'],
 		// Add support for TypeScripts fully qualified ESM imports.
 		extensionAlias: {
-			".js": [".js", ".ts"],
-			".cjs": [".cjs", ".cts"],
-			".mjs": [".mjs", ".mts"]
+			'.js': ['.js', '.ts'],
+			'.cjs': ['.cjs', '.cts'],
+			'.mjs': ['.mjs', '.mts']
 		}
 	},
 	output : {
-		filename: "fblockly.js",
-		library: "FBlockly",
-		path : path.resolve(__dirname,"out")
+		filename: 'fblockly.js',
+		library: 'FBlockly',
+		path : path.resolve(__dirname,'out')
 	},
-	mode : "development"
+	mode : 'development',
+	// plugins: [
+	// 	new DeclarationBundlerPlugin({
+	// 		moduleName: 'FBlockly',
+	// 		out: './out/fblockly.d.ts',
+	// 	})
+	// ]
 }

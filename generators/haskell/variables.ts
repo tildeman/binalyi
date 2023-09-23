@@ -8,7 +8,7 @@ export function variables_get_functional(block: Block, generator: HaskellGenerat
 	// Variable getter.
 	let code = generator.nameDB_?.getName(
 		block.getFieldValue("VAR"),
-		FNames.NameType.VARIABLE
+		FNames.XNameType.VARIABLE
 	) || "";
 	if ("paramCount_" in block && typeof block.paramCount_ == "number") {
 		const args = new Array(block.paramCount_);
@@ -31,7 +31,7 @@ export function variables_set_functional(block: Block, generator: HaskellGenerat
 		|| "()";
 	const varName = generator.nameDB_?.getName(
 		block.getFieldValue("VAR"),
-		FNames.NameType.VARIABLE
+		FNames.XNameType.VARIABLE
 	) || "";
 	if ("paramCount_" in block && typeof block.paramCount_ == "number") {
 		const params = new Array(block.paramCount_)
