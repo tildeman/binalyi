@@ -55,7 +55,7 @@ export function text_isEmpty(block: Block, generator: HaskellGenerator) {
 export function text_indexOf(block: Block, generator: HaskellGenerator) {
 	// Search the text for a substring.
 	const operator = block.getFieldValue("END") === "FIRST"
-		? "findIndexInText" : "findLastIndexInText";
+		? "findIndexInList" : "findLastIndexInList";
 	const substring =
 		generator.valueToCode(block, "FIND", generator.ORDER_FUNCTION_PARAM)
 		|| "''";
@@ -63,7 +63,7 @@ export function text_indexOf(block: Block, generator: HaskellGenerator) {
 		generator.valueToCode(block, "VALUE", generator.ORDER_FUNCTION_PARAM)
 		|| "''";
 
-	const helperFunction: string = (operator === "findIndexInText" ? `
+	const helperFunction: string = (operator === "findIndexInList" ? `
 helperFunc :: Eq a => [a] -> [a] -> Int
 helperFunc needle haystack =
 case [i | (i, 1) <- zip [0..] matches, 1 <- [1 | True]] of
@@ -126,16 +126,13 @@ export function text_getSubstring(block: Block, generator: HaskellGenerator) {
 	let at1: string;
 	switch (where1) {
 	case "FROM_START":
-		at1 = generator.getAdjustedInt(block, "AT1");
-		if (at1 == "0") {
-			at1 = "";
-		}
+		at1 = "Letter " + (generator.getAdjustedInt(block, "AT1") || "0");
 		break;
 	case "FROM_END":
-		at1 = generator.getAdjustedInt(block, "AT1");
+		at1 = "LetterFromEnd " + (generator.getAdjustedInt(block, "AT1") || "0");
 		break;
 	case "FIRST":
-		at1 = "";
+		at1 = "FirstLetter";
 		break;
 	default:
 		throw Error("Unhandled option (text_getSubstring)");
@@ -144,25 +141,41 @@ export function text_getSubstring(block: Block, generator: HaskellGenerator) {
 	let at2: string;
 	switch (where2) {
 	case "FROM_START":
-		at2 = generator.getAdjustedInt(block, "AT2");
+		at2 = "Letter " + (generator.getAdjustedInt(block, "AT2") || "0");
 		break;
 	case "FROM_END":
-		at2 = generator.getAdjustedInt(block, "AT2");
-		if (isNaN(parseInt(at2))) {
-			generator.definitions_["import_System_IO_Unsafe"] = "import System.IO.Unsafe";
-			generator.definitions_["max_bound"] = "maxBound = (maxBound :: Int)";
-			at2 += " `unsafePerformIO` maxBound";
-		} else if (at2 == "") {
-			at2 = "";
-		}
+		at2 = "LetterFromEnd " + (generator.getAdjustedInt(block, "AT2") || "0");
 		break;
 	case "LAST":
-		at2 = "";
+		at2 = "LastLetter";
 		break;
 	default:
 		throw Error("Unhandled option (text_getSubstring)");
 	}
-	const code = "take " + at2 + " (drop " + at1 + " " + text + ")";
+	const getSubstring = generator.provideFunction_("sublistBetween", `
+sublistBetween :: [a] -> SublistPosition -> SublistPosition -> [a]
+sublistBetween str pos1 pos2 = 
+	let 
+		len = length str
+		idx1 = case pos1 of
+			FirstLetter -> 0
+			LastLetter -> len - 1
+			Letter n -> fromInteger n
+			LetterFromEnd n -> len - fromInteger n
+		idx2 = case pos2 of
+			FirstLetter -> 0
+			LastLetter -> len - 1
+			Letter n -> fromInteger n
+			LetterFromEnd n -> len - fromInteger n
+	in 
+		if idx1 <= idx2 
+		then take (idx2 - idx1 + 1) $ drop idx1 str
+		else take (idx1 - idx2 + 1) $ drop idx2 str
+	`.replace(/sublistBetween/g, generator.FUNCTION_NAME_PLACEHOLDER_))
+	generator.definitions_["data_sublist"] =
+		"data SubstringPosition = FirstLetter | LastLetter | Letter Integer | LetterFromEnd Integer";
+
+	const code = `${getSubstring} ${text} (${at1}) (${at2})`;
 	return [code, generator.ORDER_FUNCTION_CALL];
 }
 

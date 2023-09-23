@@ -1,6 +1,6 @@
 {
 	"name": "binalyi",
-	"version": "0.5-pre5",
+	"version": "0.5",
 	"description": "(Purely) functional programming components for Blockly",
 	"main": "index.js",
 	"scripts": {

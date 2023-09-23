@@ -4,7 +4,6 @@
 		"strictNullChecks": true,
 		"target": "ES2018",
 		"module": "ES2015",
-		"moduleResolution": "Node",
-		"declaration": true
+		"moduleResolution": "Node"
 	}
 }
