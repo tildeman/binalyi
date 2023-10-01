@@ -127,6 +127,26 @@ type LetMutatorItemBlock = Blockly.BlockSvg & {
 	valueConnection_: Blockly.Connection | null;
 };
 
+interface LetMutatorArgumentDefintion {
+	type: "function_let_mutatorarg",
+	id: string,
+	fields: {
+		NAME: any
+	},
+	next: {
+		block?: LetMutatorArgumentDefintion
+	}
+}
+
+interface LetMutatorContainerDefinition {
+	type: "function_let_container",
+	inputs: {
+		STACK: {
+			block?: LetMutatorArgumentDefintion
+		}
+	}
+}
+
 const LetMutator = {
 	params_: [] as { id: string, name: any }[],
 
@@ -142,7 +162,7 @@ const LetMutator = {
 	},
 
 	decompose: function(this: LetMutatorBlock, workspace: Blockly.WorkspaceSvg) {
-		const containerBlockDef = {
+		const containerBlockDef: LetMutatorContainerDefinition = {
 			"type": "function_let_container",
 			"inputs": {
 				"STACK": {}
@@ -151,15 +171,15 @@ const LetMutator = {
 
 		let connDef = containerBlockDef["inputs"]["STACK"];
 		for (const param of this.params_) {
-			connDef["block"] = {
-				"type": "function_let_mutatorarg",
-				"id": param["id"],
-				"fields": {
-					"NAME": param["name"]
+			connDef.block = {
+				type: "function_let_mutatorarg",
+				id: param["id"],
+				fields: {
+					NAME: param["name"]
 				},
-				"next": {}
+				next: {}
 			};
-			connDef = connDef["block"]["next"];
+			connDef = connDef.block.next;
 		}
 
 		const containerBlock = Blockly.serialization.blocks.append(
@@ -329,7 +349,7 @@ Blockly.Extensions.register(
 );
 
 // It's an informal name, but please forget about it
-function updateShapeLikeATrueList() {
+function updateShapeLikeATrueList(this: LetMutatorBlock) {
 	this.updateShape_();
 }
 Blockly.Extensions.register(

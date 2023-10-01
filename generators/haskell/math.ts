@@ -1,43 +1,43 @@
-
 // Math blocks
 
-import { Block } from "blockly"
-import { HaskellGenerator } from "./haskell_generator"
+import { Block } from "blockly";
+import { HaskellGenerator } from "./haskell_generator";
 
 export function math_number(block: Block, generator: HaskellGenerator) {
 	// Numeric value.
-	let code: number | string = Number(block.getFieldValue("NUM"))
+	let code: number | string = Number(block.getFieldValue("NUM"));
 	let order
 	if (code === Infinity) {
-		code = "1 / 0"
-		order = generator.ORDER_MULTIPLICATIVE
+		code = "1 / 0";
+		order = generator.ORDER_MULTIPLICATIVE;
 	} else if (code === -Infinity) {
-		code = "(-1) / 0"
-		order = generator.ORDER_MULTIPLICATIVE
+		code = "(-1) / 0";
+		order = generator.ORDER_MULTIPLICATIVE;
 	} else {
 		// Sadly there is no easy way to determine
 		// when unaries can go without parentheses
-		order = code < 0 ? generator.ORDER_UNARY_SIGN : generator.ORDER_ATOMIC
+		order = code < 0 ? generator.ORDER_UNARY_SIGN : generator.ORDER_ATOMIC;
 	}
-	return [code ? code.toString() : "0", order]
+	return [code ? code.toString() : "0", order];
 }
 
 export function math_arithmetic(block: Block, generator: HaskellGenerator) {
 	// Basic arithmetic operators, and power.
-	const OPERATORS = {
+	const OPERATORS: { [op: string]: [string, number] } = {
 		"ADD": [" + ", generator.ORDER_ADDITIVE],
 		"MINUS": [" - ", generator.ORDER_ADDITIVE],
 		"MULTIPLY": [" * ", generator.ORDER_MULTIPLICATIVE],
 		"DIVIDE": [" / ", generator.ORDER_MULTIPLICATIVE],
 		"POWER": [" ** ", generator.ORDER_EXPONENTIATION],
-	}
-	const tuple = OPERATORS[block.getFieldValue("OP")]
-	const operator = tuple[0]
-	const order = tuple[1]
-	const argument0 = generator.valueToCode(block, "A", order) || "0"
-	const argument1 = generator.valueToCode(block, "B", order) || "0"
-	const code = argument0 + operator + argument1
-	return [code, order]
+	};
+	const field_value: "ADD" | "MINUS" | "MULTIPLY" | "DIVIDE" | "POWER" = block.getFieldValue("OP");
+	const tuple = OPERATORS[field_value];
+	const operator = tuple[0];
+	const order = tuple[1];
+	const argument0 = generator.valueToCode(block, "A", order) || "0";
+	const argument1 = generator.valueToCode(block, "B", order) || "0";
+	const code = argument0 + operator + argument1;
+	return [code, order];
 	// We'll get back to this later. The exponentiation operator is unpleasant
 	// to say the least. There are two versions of it here:
 	//  1. (^): Works on integers

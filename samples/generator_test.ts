@@ -1,3 +1,6 @@
+import { TypeWorkspace } from "../include/categories/types";
+import * as FBlockly from "../include/index"
+
 let toolbox = {
 	"desc": "Reference toolbox to be used with this library",
 	"kind": "categoryToolbox",
@@ -375,8 +378,15 @@ let toolbox = {
 			"custom": "VARIABLE_FUNCTIONAL"
 		}
 	]
-};
+}
 
-let workspace = FBlockly.Blockly.inject("workspace", {toolbox: toolbox});
+let workspace = FBlockly.Blockly.inject("workspace", {toolbox: toolbox})
 
-FBlockly.Init.initialize(workspace);
+FBlockly.Init.initialize(workspace as TypeWorkspace)
+
+function updateCode(event: FBlockly.Blockly.Events.Abstract) {
+  const code = FBlockly.haskellGenerator.workspaceToCode(workspace);
+  const element = document.getElementById("result");
+  if (element) (element as HTMLTextAreaElement).value = code;
+}
+workspace.addChangeListener(updateCode);

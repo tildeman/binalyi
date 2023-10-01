@@ -47,7 +47,7 @@ export type DataConstructorGetBlock = Blockly.BlockSvg & {
 
 // Some more type guards, and we're good to go!
 
-function isTypeBlock(block: Blockly.BlockSvg): block is TypeBlock {
+function isTypeBlock(block: Blockly.Block): block is TypeBlock {
 	return "isolate" in block && "typeName_" in block && "updateShape_" in block;
 }
 
@@ -137,8 +137,8 @@ function typeFlyoutBlocks(
 				"kind": "sep",
 				"gap": "4"
 			}
-		)
-		const typeMap = workspace.getTypeMap()
+		);
+		const typeMap = workspace.getTypeMap();
 		for (const typeModel in typeMap) {
 			jsonList.push(
 				{
@@ -148,7 +148,7 @@ function typeFlyoutBlocks(
 						"typeName": typeMap[typeModel].name
 					}
 				}
-			)
+			);
 		}
 
 		jsonList.push(
@@ -164,8 +164,8 @@ function typeFlyoutBlocks(
 				"kind": "block",
 				"type": "types_dc_def"
 			}
-		)
-		const dataConsMap = workspace.getDataConsMap()
+		);
+		const dataConsMap = workspace.getDataConsMap();
 		for (const dataConsModel in dataConsMap) {
 			jsonList.push(
 				{
@@ -175,46 +175,46 @@ function typeFlyoutBlocks(
 						"dcName": dataConsMap[dataConsModel].name
 					}
 				}
-			)
+			);
 		}
 	}
-	return jsonList
+	return jsonList;
 }
 
 function updateDynamicCategory(
 	workspace: TypeWorkspace): Blockly.utils.toolbox.FlyoutDefinition {
-	let toolbox: FlyoutItemInfoArray = []
+	let toolbox: FlyoutItemInfoArray = [];
 	const button: ButtonInfo = {
 		"kind": "button",
 		"text": "Create type...",
 		"callbackkey": "DATATYPE"
-	}
-	toolbox.push(button)
+	};
+	toolbox.push(button);
 
-	const blockList = typeFlyoutBlocks(workspace)
-	toolbox = toolbox.concat(blockList)
+	const blockList = typeFlyoutBlocks(workspace);
+	toolbox = toolbox.concat(blockList);
 
-	return toolbox
+	return toolbox;
 }
 
 function addTypeCallback(bflyout: Blockly.FlyoutButton): void {
 	const workspace = bflyout.getTargetWorkspace();
 	if (isTypeWorkspace(workspace)){
-		let typeName: string | null
+		let typeName: string | null;
 
 		while (true) {
-			typeName = prompt("New type name:")
+			typeName = prompt("New type name:");
 
 			if (!typeName) {
-				return // User probably clicked on it by accident
+				return; // User probably clicked on it by accident
 			}
 			if (workspace.getTypeMap()[typeName]) {
-				alert("A type named '" + typeName + "' already exists.")
+				alert("A type named '" + typeName + "' already exists.");
 			}
 			else if (workspace.getDataConsMap()[typeName]) {
-				alert("A data constructor named '" + typeName + "' already exists.")
+				alert("A data constructor named '" + typeName + "' already exists.");
 			}
-			else break
+			else break;
 		}
 
 		// Add the type to the workspace's type map
@@ -222,11 +222,11 @@ function addTypeCallback(bflyout: Blockly.FlyoutButton): void {
 			typeName,
 			4,
 			[]
-		))
+		));
 
 		// Update the dynamic category to include the new type
-		const toolbox = workspace.getToolbox()
-		if (toolbox) toolbox.refreshSelection()
+		const toolbox = workspace.getToolbox();
+		if (toolbox) toolbox.refreshSelection();
 	}
 }
 
@@ -240,7 +240,7 @@ function generateModelParams(block: Blockly.Block | null): ITypeModel {
 			[],
 			undefined,
 			[]
-		)
+		);
 	}
 	else if (block.type == "types_primitive") {
 		// This is the first type of types of types
@@ -248,27 +248,27 @@ function generateModelParams(block: Blockly.Block | null): ITypeModel {
 			block.getFieldValue("TYPE"),
 			TypeKind.Primitive,
 			[],
-		)
+		);
 	}
 	else if (block.type == "types_list") {
 		// The second of the type types
-		let inner_typemod = generateModelParams(block.getInputTargetBlock("SUBTYPE"))
+		let inner_typemod = generateModelParams(block.getInputTargetBlock("SUBTYPE"));
 		return new TypeModel(
 			"List",
 			TypeKind.List,
 			inner_typemod.typePlaceholders,
 			inner_typemod,
-		)
+		);
 	}
 	else if (block.type == "types_tuple") {
-		let inner_typemods: TypeModel[] = [], i = 0
-		let templates: string[] = []
+		let inner_typemods: TypeModel[] = [], i = 0;
+		let templates: string[] = [];
 		while (block.getInput("ADD" + i)) {
 			inner_typemods.push(
 				generateModelParams(block.getInputTargetBlock("ADD" + i))
-			)
-			templates = templates.concat(inner_typemods[i].typePlaceholders)
-			i++
+			);
+			templates = templates.concat(inner_typemods[i].typePlaceholders);
+			i++;
 		}
 		return new TypeModel(
 			"Tuple",
@@ -276,27 +276,28 @@ function generateModelParams(block: Blockly.Block | null): ITypeModel {
 			templates,
 			undefined,
 			inner_typemods
-		)
+		);
 	}
 	else if (block.type == "types_placeholder") {
 		return new TypeModel(
 			block.getFieldValue("NAME"),
 			TypeKind.Placeholder,
 			[block.getFieldValue("NAME")]
-		)
+		);
 	}
-	else if (block.type == "types_type") {
-		let inner_typemods: TypeModel[] = [], i = 0
-		let templates: string[] = []
+	else if (block.type == "types_type" && isTypeBlock(block)) {
+		let inner_typemods: TypeModel[] = [], i = 0;
+		let templates: string[] = [];
+		let type_name = "";
 		while (block.getInput("DATA" + i)) {
 			inner_typemods.push(
 				generateModelParams(block.getInputTargetBlock("DATA" + i))
-			)
-			templates = templates.concat(inner_typemods[i].typePlaceholders)
-			i++
+			);
+			templates = templates.concat(inner_typemods[i].typePlaceholders);
+			i++;
 		}
 		return new TypeModel(
-			block["typeName_"],
+			block.typeName_,
 			TypeKind.UserDefined,
 			templates,
 			undefined,
@@ -362,7 +363,7 @@ function updateTypeModels(block: Blockly.Block): void {
 		typemodel,
 		[]
 	);
-	let argtypes = ret.argTypes, placeholders = {}, cdc : TypeModel;
+	let argtypes = ret.argTypes, placeholders: { [placeholder: string]: "Yes" } = {}, cdc : TypeModel;
 	let i = 0;
 	while (block.getInput("DATA" + i)) {
 		cdc = generateModelParams(block.getInputTargetBlock("DATA" + i));
@@ -451,13 +452,14 @@ export function removeType(workspace: TypeWorkspace, typeName: string): void {
 }
 
 export function typeFlyout(
-	workspace: TypeWorkspace): Blockly.utils.toolbox.FlyoutDefinition {
+	workspace: Blockly.WorkspaceSvg): Blockly.utils.toolbox.FlyoutDefinition {
 	workspace.registerButtonCallback(
 		"DATATYPE",
 		addTypeCallback
 	);
 
-	return updateDynamicCategory(workspace);
+	if (isTypeWorkspace(workspace)) return updateDynamicCategory(workspace);
+	return [];
 }
 
 export function updateModels(workspace: TypeWorkspace): ((event: BlockAny) => void) {

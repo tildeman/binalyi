@@ -1,20 +1,13 @@
-const path = require('path');
-const DeclarationBundlerPlugin = require('types-webpack-bundler');
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 
-module.exports = {
+export default {
 	entry : './index.ts',
 	module: {
 		rules: [
 			{
 				test: /\.ts$/,
 				use: 'ts-loader'
-			},
-			{
-				test: /\.js$/,
-				loader: 'babel-loader',
-				options: {
-					targets: '>0.3% and not dead'
-				}
 			}
 		],
 	},
@@ -31,13 +24,7 @@ module.exports = {
 	output : {
 		filename: 'fblockly.js',
 		library: 'FBlockly',
-		path : path.resolve(__dirname,'out')
+		path : path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'out')
 	},
-	mode : 'development',
-	// plugins: [
-	// 	new DeclarationBundlerPlugin({
-	// 		moduleName: 'FBlockly',
-	// 		out: './out/fblockly.d.ts',
-	// 	})
-	// ]
+	mode : 'development'
 }

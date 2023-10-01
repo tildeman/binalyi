@@ -43,6 +43,8 @@ export class HaskellGenerator extends Blockly.CodeGenerator {
 	constructor(name: string = "Haskell") {
 		super(name);
 		this.nameDB_ = new FNames("");
+		this.definitions_ = Object.create(null);
+		this.typedefs = Object.create(null);
 		this.isInitialized = false;
 	}
 

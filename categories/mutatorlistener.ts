@@ -64,6 +64,7 @@ export function mutatorOpenListener(blockType: string) {
 		const workspace = workspaceMut && workspaceMut.getWorkspace();
 		if (!workspace) return;
 		updateMutatorFlyout(workspace);
-		workspace.addChangeListener(mutatorChangeListener);
+		// BlockAny is not assignable to Blockly.Event.Abstract because f*** you
+		workspace.addChangeListener(mutatorChangeListener as (e: Blockly.Events.Abstract) => void);
 	}
 }

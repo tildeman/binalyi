@@ -44,7 +44,8 @@ export function monad_operations(block: Block, generator: HaskellGenerator) {
 		"BIND": " >>= ",
 		"THEN": " >> "
 	};
-	const operator = OPERATORS[block.getFieldValue("OP")];
+	const field_value: "BIND" | "THEN" = block.getFieldValue("OP");
+	const operator = OPERATORS[field_value];
 	const order = generator.ORDER_MONAD_OPS;
 	const argument0 =
 		generator.valueToCode(block, "A", order) || "return ()";
@@ -60,7 +61,8 @@ export function monad_bindings(block: Block, generator: HaskellGenerator) {
 		"DOLET": ["", " <- "],
 		"LET": ["let ", " = "]
 	};
-	const tuple = OPERATORS[block.getFieldValue("OP")];
+	const field_value: "DOLET" | "LET" = block.getFieldValue("OP");
+	const tuple = OPERATORS[field_value];
 	const prefix = tuple[0];
 	const operator = tuple[1];
 	const order = generator.ORDER_NONE;

@@ -225,7 +225,7 @@ type VariablesSetFunctionalItemBlock = Blockly.BlockSvg & {
 	valueConnection_: Blockly.Connection | null
 };
 
-const VariableDefVarMixin = function() {
+const VariableDefVarMixin = function(this: VariablesSetFunctionalBlock) {
 	const mixin = {
 		renameVarById: function(this: VariablesSetFunctionalBlock, oldId: string, newId: string) {
 			const oldVar = this.workspace.getVariableById(oldId);
@@ -259,8 +259,28 @@ Blockly.Extensions.register(
 	VariableDefVarMixin
 )
 
-const VariableDefMutator = {
 
+interface VariableDefMutatorArgumentDefintion {
+	type: "variables_set_functional_mutatorarg",
+	id: string,
+	fields: {
+		NAME: any
+	},
+	next: {
+		block?: VariableDefMutatorArgumentDefintion
+	}
+}
+
+interface VariableDefMutatorContainerDefinition {
+	type: "variables_get_functional_container",
+	inputs: {
+		STACK: {
+			block?: VariableDefMutatorArgumentDefintion
+		}
+	}
+}
+
+const VariableDefMutator = {
 	saveExtraState: function(this: VariablesSetFunctionalBlock){
 		const state = Object.create(null);
 		state["variableId"] = this.getFieldValue("VAR");
@@ -318,7 +338,7 @@ const VariableDefMutator = {
 
 	decompose: function(this: VariablesSetFunctionalBlock, workspace: Blockly.WorkspaceSvg) {
 		const variableId = this.getFieldValue("VAR")
-		const containerBlockDef = {
+		const containerBlockDef: VariableDefMutatorContainerDefinition = {
 			"type": "variables_get_functional_container",
 			"inputs": {
 				"STACK": {}
@@ -466,7 +486,7 @@ interface VariablesCallGetDefMixin {
 	getVarModels: (this: VariablesGetFunctionalBlock) => any;
 }
 
-const variableCGDMixin = function() {
+const variableCGDMixin = function(this: VariablesGetFunctionalBlock) {
 	const mixin = {
 		model_: null as ObservableNotProcedureModel | null,
 
@@ -647,7 +667,7 @@ Blockly.Extensions.registerMutator(
 	["variables_get_functional_mutatorarg"]
 );
 
-const variableUpdateShape = function() {
+const variableUpdateShape = function(this: VariablesGetFunctionalBlock) {
 	this.updateShape_();
 }
 Blockly.Extensions.register(

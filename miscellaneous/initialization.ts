@@ -1,6 +1,6 @@
 import * as FunctionalVariables from "../categories/variables_functional"
 import * as Datatypes from "../categories/types"
-import { IFlyout } from "blockly"
+import { Events, IFlyout } from "blockly"
 
 export function initialize(workspace: Datatypes.TypeWorkspace) {
 	workspace.registerToolboxCategoryCallback(
@@ -12,7 +12,8 @@ export function initialize(workspace: Datatypes.TypeWorkspace) {
 		Datatypes.typeFlyout);
 
 	workspace.addChangeListener(
-		Datatypes.updateModels(workspace)
+		// BlockAny is not assignable to Blockly.Event.Abstract because f*** you
+		Datatypes.updateModels(workspace) as (e: Events.Abstract) => void
 	);
 
 	const flyout: IFlyout | null = workspace.getFlyout();

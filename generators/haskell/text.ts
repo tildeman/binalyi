@@ -186,7 +186,8 @@ export function text_changeCase(block: Block, generator: HaskellGenerator) {
 		"LOWERCASE": "map Data.Char.toLower",
 		"TITLECASE": "toTitle"
 	};
-	let operator = OPERATORS[block.getFieldValue("CASE")];
+	const field_value: "UPPERCASE" | "LOWERCASE" | "TITLECASE" = block.getFieldValue("CASE");
+	let operator = OPERATORS[field_value];
 	const text =
 		generator.valueToCode(block, "TEXT", generator.ORDER_FUNCTION_PARAM)
 		|| '""';
@@ -209,7 +210,8 @@ export function text_trim(block: Block, generator: HaskellGenerator) {
 		"RIGHT": "Data.List.dropWhileEnd",
 		"BOTH": null
 	}
-	const operator = OPERATORS[block.getFieldValue("MODE")];
+	const field_value: "LEFT" | "RIGHT" | "BOTH" = block.getFieldValue("MODE");
+	const operator = OPERATORS[field_value];
 	const text = generator.valueToCode(block, "TEXT",
 									generator.ORDER_FUNCTION_PARAM) || '""';
 

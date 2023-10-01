@@ -326,7 +326,7 @@ Blockly.Extensions.registerMixin(
 );
 
 // It's an informal name, but please forget about it
-function updateShapeLikeATrueList() {
+function updateShapeLikeATrueList(this: LetMutatorBlock) {
 	this.updateShape_();
 }
 Blockly.Extensions.register(

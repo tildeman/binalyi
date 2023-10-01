@@ -1,20 +1,24 @@
 {
 	"name": "binalyi",
-	"version": "0.5",
+	"version": "0.6-pre1",
 	"description": "(Purely) functional programming components for Blockly",
 	"main": "index.js",
 	"scripts": {
-		"build": "webpack"
+		"build": "webpack",
+		"build_headers": "npx tsc -p \"tsconfig_build_headers.json\" && copyfiles -u 1 \"miscellaneous/**/*.d.ts\" \"include/miscellaneous\"",
+		"build_samples": "npx tsc -p \"tsconfig_build_samples.json\" && node utilities/strip_imports.js out/test.js out/generator_test.js",
+		"build_toolchain": "npx tsc -p utilities"
 	},
+	"type": "module",
 	"author": "tildeman",
 	"license": "Apache-2.0",
 	"dependencies": {
 		"blockly": "^10.1.3"
 	},
 	"devDependencies": {
-		"babel-loader": "^9.1.3",
+		"copyfiles": "^2.4.1",
 		"ts-loader": "^9.4.4",
-		"types-webpack-bundler": "^1.0.2",
+		"typescript": "^5.2.2",
 		"webpack": "^5.75.0",
 		"webpack-cli": "^5.0.1"
 	}

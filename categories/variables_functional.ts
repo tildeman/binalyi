@@ -4,7 +4,7 @@ export type VariableModelWithParamCount = Blockly.VariableModel & {
 	paramCount_?: number;
 }
 
-export function generateVariableFieldDom(variableModel) {
+export function generateVariableFieldDom(variableModel: Blockly.VariableModel) {
 	const field = Blockly.utils.xml.createElement("field")
 	field.setAttribute("name", "VAR")
 	field.setAttribute("id", variableModel.getId())

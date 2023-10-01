@@ -23,6 +23,7 @@ export class FNames extends Blockly.Names {
 		super(reservedWordsList, opt_variablePrefix);
 		/** The prefix to attach to variable names in generated code. */
 		this.wariablePrefix = opt_variablePrefix || '';
+		this.wariableMap = null;
 
 		this.reserwedWords = new Set<string>(
 			reservedWordsList ? reservedWordsList.split(',') : []

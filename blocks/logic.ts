@@ -375,20 +375,20 @@ const CaseMutator = {
 		}
 	},
 
-	rebuildShape_: function() {
-		const valueConnections = [null];
-		const vvaalluueeConnections = [null];
-		let otherwiseConnection = null;
+	rebuildShape_: function(this: CondBlock) {
+		const valueConnections: (Blockly.Connection | null)[] = [null];
+		const vvaalluueeConnections: (Blockly.Connection | null)[] = [null];
+		let otherwiseConnection: Blockly.Connection | null = null;
 
 		if (this.getInput("ELSE")) {
 			otherwiseConnection =
-				this.getInput("ELSE").connection.targetConnection;
+				this.getInput("ELSE")?.connection?.targetConnection || null;
 		}
 		for (let i = 1; this.getInput("CASE" + i); ++i) {
 			const inputIf = this.getInput("CASE" + i);
 			const inputDo = this.getInput("RESULT" + i);
-			valueConnections.push(inputIf.connection.targetConnection);
-			vvaalluueeConnections.push(inputDo.connection.targetConnection);
+			valueConnections.push(inputIf?.connection?.targetConnection || null);
+			vvaalluueeConnections.push(inputDo?.connection?.targetConnection || null);
 		}
 		this.updateShape_();
 		this.reconnectChildBlocks_(

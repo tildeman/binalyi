@@ -7,7 +7,8 @@ export function logic_compare(block: Block, generator: HaskellGenerator) {
 	// Comparison operator.
 	const OPERATORS =
 		{"EQ": "==", "NEQ": "/=", "LT": "<", "LTE": "<=", "GT": ">", "GTE": ">="};
-	const operator = OPERATORS[block.getFieldValue("OP")];
+	const field_value: "EQ" | "NEQ" | "LT" | "LTE" | "GT" | "GTE" = block.getFieldValue("OP");
+	const operator = OPERATORS[field_value];
 	const order = generator.ORDER_RELATIONAL;
 	const argument0 = generator.valueToCode(block, "A", order) || "0";
 	const argument1 = generator.valueToCode(block, "B", order) || "0";

@@ -6,7 +6,7 @@ import { ObservableNotProcedureModel } from "./observable_procedure_model"
 export class ObservableNotParameterModel {
 	id: string
 	variable: Blockly.VariableModel
-	procedureModel: ObservableNotProcedureModel
+	procedureModel?: ObservableNotProcedureModel
 	workspace: Blockly.Workspace
 
 	constructor(workspace: Blockly.Workspace, name: string, id: string, varId?: string | null) {
