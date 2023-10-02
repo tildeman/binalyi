@@ -6,5 +6,5 @@
 		"module": "ES2015",
 		"moduleResolution": "Node"
 	},
-	"exclude": [ "utilities" ]
+	"exclude": [ "utilities", "samples" ]
 }
